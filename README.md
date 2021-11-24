@@ -33,8 +33,17 @@ Let's write our first automated test with Mockipfs. To test IPFS-based code, you
 A simple example of that, testing code based on [ipfs-http-client](https://www.npmjs.com/package/ipfs-http-client), might look like this:
 
 ```typescript
-const mockNode = require("mockipfs").getLocal();
-const Ipfs = require("ipfs-http-client");
+// Standard packages to make IPFS requests:
+import * as Ipfs from "ipfs-http-client";
+import all from 'it-all';
+import {
+    concat as uint8ArrayConcat,
+    toString as uint8ToString
+} from 'uint8arrays';
+
+// Import MockIPFS and create a fake node:
+import * as Mockipfs from 'mockipfs'
+const mockNode = Mockipfs.getLocal();
 
 describe("Mockifps", () => {
     // Start & stop your mock node between tests
@@ -42,22 +51,23 @@ describe("Mockifps", () => {
     afterEach(() => mockNode.stop());
 
     it("lets you mock behaviour and assert on node interactions", async () => {
-        const hash = "a-fake-ipfs-hash";
+        const ipfsPath = "/ipfs/a-fake-IPFS-id";
 
         // Mock some node endpoints:
-        const catMock = await mockNode.forCat(hash).thenReturn("Mock content");
+        const catMock = await mockNode.forCat(ipfsPath).thenReturn("Mock content");
 
         // Lookup some content with a real IPFS client:
         const ipfsClient = Ipfs.create(mockNode.ipfsOptions);
-        const content = ipfsClient.cat(hash);
+        const content = await all(ipfsClient.cat(ipfsPath));
 
         // Assert on the response:
-        expect(cat).to.equal("Mock content");
+        const contentText = uint8ToString(uint8ArrayConcat(content));
+        expect(contentText).to.equal("Mock content");
 
         // Assert that our mock was called as expected:
         const catRequests = await catMock.getSeenRequests();
         expect(catRequests.length).to.equal(1);
-        expect(catRequests[0].hash).to.equal(hash);
+        expect(catRequests[0].params.arg).to.equal(ipfsPath);
     });
 });
 ```
