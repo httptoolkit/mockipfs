@@ -11,6 +11,6 @@ export function getRemote(options?: mockttp.MockttpClientOptions) {
     return new MockIPFSNode(mockttp.getRemote(options));
 }
 
-export function getStandalone(options?: mockttp.StandaloneServerOptions) {
-    return mockttp.getStandalone(options);
+export function getAdminServer(options?: mockttp.MockttpAdminServerOptions) {
+    return mockttp.getAdminServer(options);
 }

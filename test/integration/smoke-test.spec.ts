@@ -1,19 +1,16 @@
-import { expect } from "chai";
-
-import * as mockipfs from "../..";
-
-import * as Ipfs from "ipfs-http-client";
-
-import all = require('it-all');
 import {
-    concat as uint8ArrayConcat,
-    toString as uint8ToString
-} from 'uint8arrays';
+    expect,
+    MockIPFS,
+    IPFS,
+    itAll,
+    uint8ArrayConcat,
+    uint8ToString
+} from '../test-setup';
 
-const mockNode = mockipfs.getLocal();
+const mockNode = MockIPFS.getLocal();
 
-describe("Mockifps", () => {
-    // Start & stop your mock node between tests
+describe("MockIPFS", () => {
+    // Start & stop your mock node to reset state between tests
     beforeEach(() => mockNode.start());
     afterEach(() => mockNode.stop());
 
@@ -24,8 +21,8 @@ describe("Mockifps", () => {
         const catMock = await mockNode.forCat(ipfsPath).thenReturn("Mock content");
 
         // Lookup some content with a real IPFS client:
-        const ipfsClient = Ipfs.create(mockNode.ipfsOptions);
-        const content = await all(ipfsClient.cat(ipfsPath));
+        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const content = await itAll(ipfsClient.cat(ipfsPath));
 
         // Assert on the response:
         const contentText = uint8ToString(uint8ArrayConcat(content));
