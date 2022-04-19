@@ -53,6 +53,27 @@ describe("IPNS mocking", () => {
         expect(result).to.equal("/ipfs/subsequent-mock-address");
     });
 
+    it("can timeout request resolution", async () => {
+        await mockNode.forName('ipfs.io').thenTimeout();
+
+        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+        const lookup = itValue(ipfsClient.name.resolve('ipfs.io'));
+
+        expect(await Promise.race([
+            lookup,
+            delay(500).then(() => 'timeout')
+        ])).to.equal('timeout');
+    });
+
+    it("accepts all name publications by default", async () => {
+        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+        const result = await ipfsClient.name.publish('/ipfs/content', { key: 'ipns-key' });
+
+        expect(result).to.deep.equal({ name: 'ipns-key', value: '/ipfs/content' });
+    });
+
     it("can record name resolutions", async () => {
         await mockNode.forName('ipfs.io')
             .thenResolveTo("/ipfs/mock-address");
@@ -68,16 +89,16 @@ describe("IPNS mocking", () => {
         ]);
     });
 
-    it("can timeout request resolution", async () => {
-        await mockNode.forName('ipfs.io').thenTimeout();
-
+    it("can record name publication", async () => {
         const ipfsClient = IPFS.create(mockNode.ipfsOptions);
 
-        const lookup = itValue(ipfsClient.name.resolve('ipfs.io'));
+        await ipfsClient.name.publish('/ipfs/content-hash');
+        await ipfsClient.name.publish('/ipfs/named-content-hash', { key: 'custom-key' });
 
-        expect(await Promise.race([
-            lookup,
-            delay(500).then(() => 'timeout')
-        ])).to.equal('timeout');
+        expect(await mockNode.getIPNSPublications()).to.deep.equal([
+            { name: null, value: '/ipfs/content-hash' },
+            { name: 'custom-key', value: '/ipfs/named-content-hash' }
+        ]);
     });
+
 });

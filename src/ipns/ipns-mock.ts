@@ -3,8 +3,12 @@ import * as Mockttp from "mockttp"
 type MockttpRequestCallback = (request: Mockttp.CompletedRequest) =>
     Promise<Mockttp.requestHandlers.CallbackResponseResult>;
 
+type IPNSResolveRequest = { type: 'resolve', name: string | null };
+type IPNSPublishRequest = { type: 'publish', name: string | null, value: string };
+
 export type IPNSRequest =
-    | { type: 'resolve', name: string | null };
+    | IPNSResolveRequest
+    | IPNSPublishRequest;
 
 export type IPNSAction =
     | { type: 'resolve', path: string, delay?: number }
@@ -56,6 +60,27 @@ export class IPNSMock {
         this.seenRequests = [];
     }
 
+    buildMockttpRules(): Array<Mockttp.RequestRuleData> {
+        return [
+            ...['/api/v0/name/resolve', '/api/v0/resolve'].map((resolvePath) => ({
+                matchers: [
+                    new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                    new Mockttp.matchers.SimplePathMatcher(resolvePath)
+                ],
+                completionChecker: new Mockttp.completionCheckers.Always(),
+                handler: new Mockttp.requestHandlers.CallbackHandler(this.resolveHandler)
+            })),
+            {
+                matchers: [
+                    new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                    new Mockttp.matchers.SimplePathMatcher('/api/v0/name/publish')
+                ],
+                completionChecker: new Mockttp.completionCheckers.Always(),
+                handler: new Mockttp.requestHandlers.CallbackHandler(this.publishHandler)
+            }
+        ];
+    }
+
     resolveHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
         const parsedURL = new URL(request.url);
         const name = parsedURL.searchParams.get('arg');
@@ -89,12 +114,35 @@ export class IPNSMock {
                     throw new Error(`Unrecognized IPNS action type: ${(selectedAction as any).type}`);
             }
         }
-    }
+    };
+
+    publishHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
+        const parsedURL = new URL(request.url);
+
+        const value = parsedURL.searchParams.get('arg')!;
+        const name = parsedURL.searchParams.get('key');
+
+        if (this.recordTraffic) this.seenRequests.push({ type: 'publish', name, value });
+
+        return {
+            status: 200,
+            json: {
+                Name: name ?? 'self-ipns-key',
+                Value: value
+            }
+        };
+    };
 
     getIPNSQueries() {
         return this.seenRequests
             .filter((request) => request.type === 'resolve')
             .map((request) => ({ name: request.name }));
+    }
+
+    getIPNSPublications() {
+        return this.seenRequests
+            .filter((request): request is IPNSPublishRequest => request.type === 'publish')
+            .map((request) => ({ name: request.name, value: request.value }));
     }
 
 }

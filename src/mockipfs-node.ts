@@ -1,4 +1,4 @@
-import { Mockttp } from "mockttp";
+import { Mockttp, matchers as mockttpMatchers } from "mockttp";
 
 import { IPNSActionBuilder } from "./ipns/ipns-action-builder";
 import { IPNSMock } from "./ipns/ipns-mock";
@@ -45,8 +45,9 @@ export class MockIPFSNode {
 
     reset() {
         this.mockttpServer.reset();
-        this.addBaseRules();
         this.ipnsMock.reset();
+
+        this.addBaseRules();
     };
 
     get ipfsOptions() {
@@ -60,16 +61,13 @@ export class MockIPFSNode {
     private ipnsMock = new IPNSMock();
 
     private addBaseRules() {
-        let rules = [
-            this.mockttpServer.forPost('/api/v0/name/resolve'),
-            this.mockttpServer.forPost('/api/v0/resolve') // Dupe IPNS endpoint
-        ];
+        const ipnsRules = this.ipnsMock.buildMockttpRules();
 
         if (this.hostname) {
-            rules = rules.map(r => r.forHostname(this.hostname!))
+            ipnsRules.forEach(r => r.matchers.push(new mockttpMatchers.HostnameMatcher(this.hostname!)));
         }
 
-        rules.forEach(r => r.thenCallback(this.ipnsMock.resolveHandler));
+        this.mockttpServer.addRequestRules(...ipnsRules);
     }
 
     forName(name: string) {
@@ -92,5 +90,9 @@ export class MockIPFSNode {
 
     async getIPNSQueries(): Promise<Array<{ name: string | null }>> {
         return this.ipnsMock.getIPNSQueries();
+    }
+
+    async getIPNSPublications(): Promise<Array<{ name: string | null, value: string }>> {
+        return this.ipnsMock.getIPNSPublications();
     }
 }
