@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { URL } from 'url';
 import { MockedEndpoint } from "mockttp";
 
@@ -21,7 +20,7 @@ export class MockedIpfsEndpoint {
                     const currentValue = result[key];
                     if (!currentValue) {
                         result[key] = value;
-                    } else if (!_.isArray(currentValue)) {
+                    } else if (!Array.isArray(currentValue)) {
                         result[key] = [currentValue, value];
                     } else {
                         currentValue.push(value);
