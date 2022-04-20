@@ -17,11 +17,23 @@ export type IPNSAction =
 
 const successResponse = (path: string) => ({
     status: 200,
+    headers: {
+        // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
+        'transfer-encoding': 'chunked',
+        // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
+        'connection': 'keep-alive'
+    },
     json: { Path: path }
 });
 
 const notFoundResponse = (name: string) => ({
     status: 500,
+    headers: {
+        // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
+        'transfer-encoding': 'chunked',
+        // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
+        'connection': 'keep-alive'
+    },
     json: {
         Message: `queryTxt ENOTFOUND _dnslink.${name}`,
         Code: 0,
@@ -31,6 +43,12 @@ const notFoundResponse = (name: string) => ({
 
 const badRequestResponse = (message: string) => ({
     status: 400,
+    headers: {
+        // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
+        'transfer-encoding': 'chunked',
+        // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
+        'connection': 'keep-alive'
+    },
     json: {
         Message: message,
         Code: 1,
@@ -126,6 +144,12 @@ export class IPNSMock {
 
         return {
             status: 200,
+            headers: {
+                // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
+                'transfer-encoding': 'chunked',
+                // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
+                'connection': 'keep-alive'
+            },
             json: {
                 Name: name ?? 'self-ipns-key',
                 Value: value
