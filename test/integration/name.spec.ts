@@ -36,6 +36,17 @@ describe("IPNS mocking", () => {
         expect(result).to.equal("/ipfs/mock-address");
     });
 
+    it("can overide all name resolution", async () => {
+        await mockNode.forName().thenResolveTo("/ipfs/mock-address");
+
+        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+        const result: string = await itValue(ipfsClient.name.resolve('any-name.test'))
+            .catch(e => e);
+
+        expect(result).to.equal("/ipfs/mock-address");
+    });
+
     it("can change name resolution", async () => {
         await mockNode.forName('ipfs.io').thenResolveTo("/ipfs/initial-mock-address");
         await mockNode.forName('ipfs.io').thenResolveTo("/ipfs/subsequent-mock-address");

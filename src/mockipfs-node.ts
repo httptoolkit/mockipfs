@@ -1,42 +1,20 @@
-import { Mockttp, matchers as mockttpMatchers } from "mockttp";
+import { Mockttp, RulePriority } from "mockttp";
 
-import { IPNSActionBuilder } from "./ipns/ipns-action-builder";
+import { IPNSActionBuilder } from "./ipns/ipns-rule-builder";
 import { IPNSMock } from "./ipns/ipns-mock";
 
-import { RuleBuilder } from "./rule-builder";
-
-export interface MockIPFSOptions {
-    /**
-     * The hostname that will be used for the IPFS node. This can be any
-     * DNS or IP address that resolves to this node.
-     *
-     * If set, this hostname will be returned in ipfsOptions() and the
-     * mock IPFS behaviour will apply only to requests explicitly sent
-     * to this hostname.
-     *
-     * This can be useful when accessing the IPFS mock node remotely, or
-     * when using this alongside Mockttp, to ensure that IPFS mocks do
-     * not interfere with other HTTP traffic mocked elsewhere.
-     */
-    nodeHostname?: string;
-};
+import { CatRuleBuilder } from "./cat-rule-builder";
 
 export class MockIPFSNode {
 
-    private readonly hostname: string | undefined;
-
     constructor(
         private mockttpServer: Mockttp,
-        options: MockIPFSOptions = {}
-    ) {
-        this.hostname = options.nodeHostname;
+    ) {}
 
-        this.addBaseRules();
-    }
-
-    start() {
+    async start() {
         this.reset();
-        return this.mockttpServer.start();
+        await this.mockttpServer.start();
+        await this.addBaseRules();
     }
 
     stop() {
@@ -46,46 +24,38 @@ export class MockIPFSNode {
     reset() {
         this.mockttpServer.reset();
         this.ipnsMock.reset();
-
-        this.addBaseRules();
     };
 
     get ipfsOptions() {
         return {
             protocol: 'http',
-            host: this.hostname,
+            host: 'localhost',
             port: this.mockttpServer.port
         };
     }
 
-    private ipnsMock = new IPNSMock();
+    private ipnsMock = new IPNSMock(this.mockttpServer);
 
-    private addBaseRules() {
-        const ipnsRules = this.ipnsMock.buildMockttpRules();
+    private async addBaseRules() {
+        this.ipnsMock.addMockttpFallbackRules();
 
-        if (this.hostname) {
-            ipnsRules.forEach(r => r.matchers.push(new mockttpMatchers.HostnameMatcher(this.hostname!)));
-        }
-
-        this.mockttpServer.addRequestRules(...ipnsRules);
     }
 
-    forName(name: string) {
-        return new IPNSActionBuilder(this.ipnsMock.addAction.bind(this.ipnsMock, name));
+    forName(name?: string) {
+        return new IPNSActionBuilder(
+            name,
+            this.ipnsMock.addResolveAction
+        );
     }
 
     forCat(ipfsPath?: string) {
-        let catRuleBuilder = this.mockttpServer.forPost('/api/v0/cat')
-
-        if (this.hostname) {
-            catRuleBuilder = catRuleBuilder.forHostname(this.hostname);
-        }
+        let catRuleBuilder = this.mockttpServer.forPost('/api/v0/cat');
 
         if (ipfsPath !== undefined) {
             catRuleBuilder = catRuleBuilder.withQuery({ arg: ipfsPath });
         }
 
-        return new RuleBuilder(catRuleBuilder);
+        return new CatRuleBuilder(catRuleBuilder);
     }
 
     async getIPNSQueries(): Promise<Array<{ name: string | null }>> {

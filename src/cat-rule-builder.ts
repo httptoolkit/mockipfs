@@ -1,13 +1,13 @@
 import { RequestRuleBuilder } from "mockttp";
-import { MockedIpfsEndpoint } from "./mocked-endpoint";
+import { MockedIPFSEndpoint } from "./mocked-endpoint";
 
-export class RuleBuilder {
+export class CatRuleBuilder {
     constructor(
         private httpRuleBuilder: RequestRuleBuilder
     ) {}
 
     async thenReturn(rawData: string) {
-        return new MockedIpfsEndpoint(
+        return new MockedIPFSEndpoint(
             await this.httpRuleBuilder.thenReply(200, rawData)
         );
     }

@@ -3,36 +3,13 @@ import * as Mockttp from "mockttp"
 type MockttpRequestCallback = (request: Mockttp.CompletedRequest) =>
     Promise<Mockttp.requestHandlers.CallbackResponseResult>;
 
-type IPNSResolveRequest = { type: 'resolve', name: string | null };
-type IPNSPublishRequest = { type: 'publish', name: string | null, value: string };
-
-export type IPNSRequest =
-    | IPNSResolveRequest
-    | IPNSPublishRequest;
-
-export type IPNSAction =
-    | { type: 'resolve', path: string, delay?: number }
-    | { type: 'reject' }
-    | { type: 'implicit-timeout' };
-
-const successResponse = (path: string) => ({
-    status: 200,
-    headers: {
-        // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
-        'transfer-encoding': 'chunked',
-        // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
-        'connection': 'keep-alive'
-    },
-    json: { Path: path }
-});
-
 const notFoundResponse = (name: string) => ({
     status: 500,
     headers: {
-        // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
+        // This matches the IPFS headers, and it's also required to work around various
+        // Undici fetch + Mockttp minimal response bugs in Node 18
         'transfer-encoding': 'chunked',
-        // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
-        'connection': 'keep-alive'
+        'connection': 'close'
     },
     json: {
         Message: `queryTxt ENOTFOUND _dnslink.${name}`,
@@ -44,10 +21,10 @@ const notFoundResponse = (name: string) => ({
 const badRequestResponse = (message: string) => ({
     status: 400,
     headers: {
-        // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
+        // This matches the IPFS headers, and it's also required to work around various
+        // Undici fetch + Mockttp minimal response bugs in Node 18
         'transfer-encoding': 'chunked',
-        // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
-        'connection': 'keep-alive'
+        'connection': 'close'
     },
     json: {
         Message: message,
@@ -56,82 +33,74 @@ const badRequestResponse = (message: string) => ({
     }
 });
 
+const RESOLVE_PATHS = ['/api/v0/name/resolve', '/api/v0/resolve'];
+
+/**
+ * Wraps a set of Mockttp rules, providing an API over them to query their collected
+ * traffic, providing fallback rules for default behaviour, and adding base configuration
+ * to new rules as they're added.
+ */
 export class IPNSMock {
 
-    private hostnameActions: {
-        [key: string]: Array<IPNSAction> | undefined
-    } = {};
-
-    private seenRequests: Array<IPNSRequest> = [];
+    private activeResolveRules: Array<Mockttp.MockedEndpoint> = [];
+    private activePublishRules: Array<Mockttp.MockedEndpoint> = [];
 
     constructor(
-        private recordTraffic: boolean = true
+        private mockttpServer: Mockttp.Mockttp
     ) {}
 
-    async addAction(name: string, action: IPNSAction): Promise<void> {
-        const existingActions = this.hostnameActions[name] ??= [];
-        existingActions.push(action);
-    }
-
     reset() {
-        this.hostnameActions = {};
-        this.seenRequests = [];
+        this.activeResolveRules = [];
+        this.activePublishRules = [];
     }
 
-    buildMockttpRules(): Array<Mockttp.RequestRuleData> {
-        return [
-            ...['/api/v0/name/resolve', '/api/v0/resolve'].map((resolvePath) => ({
-                matchers: [
-                    new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
-                    new Mockttp.matchers.SimplePathMatcher(resolvePath)
-                ],
-                completionChecker: new Mockttp.completionCheckers.Always(),
-                handler: new Mockttp.requestHandlers.CallbackHandler(this.resolveHandler)
-            })),
-            {
+    async addMockttpFallbackRules() {
+        const [publishRule] = await Promise.all([
+            this.mockttpServer.addRequestRules({
+                priority: Mockttp.RulePriority.FALLBACK,
                 matchers: [
                     new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
                     new Mockttp.matchers.SimplePathMatcher('/api/v0/name/publish')
                 ],
                 completionChecker: new Mockttp.completionCheckers.Always(),
                 handler: new Mockttp.requestHandlers.CallbackHandler(this.publishHandler)
-            }
-        ];
+            }),
+
+            this.addResolveAction({
+                priority: Mockttp.RulePriority.FALLBACK,
+                matchers: [],
+                completionChecker: new Mockttp.completionCheckers.Always(),
+                handler: new Mockttp.requestHandlers.CallbackHandler(this.resolveHandler)
+            })
+        ]);
+
+        this.activePublishRules.push(...publishRule);
     }
+
+    addResolveAction = async (actionRuleData: Mockttp.RequestRuleData) => {
+        const rules = await this.mockttpServer.addRequestRules(
+            ...RESOLVE_PATHS.map((resolvePath) => ({
+                ...actionRuleData,
+                matchers: [
+                    ...actionRuleData.matchers,
+                    new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                    new Mockttp.matchers.SimplePathMatcher(resolvePath)
+                ]
+            }))
+        );
+
+        this.activeResolveRules.push(...rules);
+    };
 
     resolveHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
         const parsedURL = new URL(request.url);
         const name = parsedURL.searchParams.get('arg');
 
-        if (this.recordTraffic) {
-            this.seenRequests.push({ type: 'resolve', name });
-        }
-
         if (!name) {
             return badRequestResponse("Invalid request query input");
         }
 
-        const actions = this.hostnameActions[name];
-        if (!actions?.length) {
-            return notFoundResponse(name);
-        } else {
-            const selectedAction = actions[0];
-
-            // If you define multiple actions for the same hostname, we run through them until
-            // the last action, which repeats indefinitely:
-            if (actions.length > 1) actions.shift();
-
-            switch (selectedAction.type) {
-                case 'resolve':
-                    return successResponse(selectedAction.path);
-                case 'reject':
-                    return notFoundResponse(name);
-                case 'implicit-timeout': // I.e. server never responds at all
-                    return new Promise(() => {});
-                default:
-                    throw new Error(`Unrecognized IPNS action type: ${(selectedAction as any).type}`);
-            }
-        }
+        return notFoundResponse(name);
     };
 
     publishHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
@@ -139,8 +108,6 @@ export class IPNSMock {
 
         const value = parsedURL.searchParams.get('arg')!;
         const name = parsedURL.searchParams.get('key');
-
-        if (this.recordTraffic) this.seenRequests.push({ type: 'publish', name, value });
 
         return {
             status: 200,
@@ -157,16 +124,41 @@ export class IPNSMock {
         };
     };
 
-    getIPNSQueries() {
-        return this.seenRequests
-            .filter((request) => request.type === 'resolve')
-            .map((request) => ({ name: request.name }));
+    async getIPNSQueries() {
+        const seenResolveRequests = (await Promise.all(
+            this.activeResolveRules
+            .map((rule) => rule.getSeenRequests())
+        )).flat();
+
+        sortRequestsByStartTime(seenResolveRequests);
+
+        return seenResolveRequests.map((request) => {
+            const parsedURL = new URL(request.url)
+            return { name: parsedURL.searchParams.get('arg') };
+        });
     }
 
-    getIPNSPublications() {
-        return this.seenRequests
-            .filter((request): request is IPNSPublishRequest => request.type === 'publish')
-            .map((request) => ({ name: request.name, value: request.value }));
+    async getIPNSPublications() {
+        const seenPublishRequests = (await Promise.all(
+            this.activePublishRules
+            .map((rule) => rule.getSeenRequests())
+        )).flat();
+
+        sortRequestsByStartTime(seenPublishRequests);
+
+        return seenPublishRequests.map((request) => {
+            const parsedURL = new URL(request.url)
+            return {
+                name: parsedURL.searchParams.get('key'),
+                value: parsedURL.searchParams.get('arg')!,
+            };
+        });
     }
 
+}
+
+function sortRequestsByStartTime(requests: Mockttp.CompletedRequest[]) {
+    requests.sort((r1, r2) =>
+        (r1.timingEvents as Mockttp.TimingEvents).startTime - (r2.timingEvents as Mockttp.TimingEvents).startTime
+    );
 }

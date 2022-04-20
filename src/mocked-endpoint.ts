@@ -1,7 +1,7 @@
 import { URL } from 'url';
 import { MockedEndpoint } from "mockttp";
 
-export class MockedIpfsEndpoint {
+export class MockedIPFSEndpoint {
     constructor(
         private mockedHttpEndpoint: MockedEndpoint
     ) {}
