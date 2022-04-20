@@ -39,6 +39,10 @@ export class MockIPFSNode {
     private async addBaseRules() {
         this.ipnsMock.addMockttpFallbackRules();
 
+        // The real default IPFS cat behaviour seems to be just timing out:
+        this.mockttpServer.forPost('/api/v0/cat')
+            .asPriority(RulePriority.FALLBACK)
+            .thenTimeout();
     }
 
     forName(name?: string) {

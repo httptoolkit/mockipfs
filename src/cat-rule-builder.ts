@@ -11,4 +11,10 @@ export class CatRuleBuilder {
             await this.httpRuleBuilder.thenReply(200, rawData)
         );
     }
+
+    async thenTimeout() {
+        return new MockedIPFSEndpoint(
+            await this.httpRuleBuilder.thenTimeout()
+        );
+    }
 }
