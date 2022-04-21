@@ -9,7 +9,7 @@ import {
 
 describe("IPNS mocking", () => {
 
-    const mockNode = MockIPFS.getLocal({ debug: true });
+    const mockNode = MockIPFS.getLocal();
 
     beforeEach(() => mockNode.start());
     afterEach(() => mockNode.stop());

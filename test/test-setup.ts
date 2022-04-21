@@ -1,5 +1,5 @@
 import { AbortController } from "node-abort-controller";
-global.AbortController = AbortController;
+globalThis.AbortController ??= AbortController;
 
 import { expect } from "chai";
 

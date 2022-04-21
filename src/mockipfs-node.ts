@@ -7,9 +7,14 @@ import { CatRuleBuilder } from "./cat-rule-builder";
 
 export class MockIPFSNode {
 
+    private ipnsMock: IPNSMock;
+
     constructor(
         private mockttpServer: Mockttp,
-    ) {}
+    ) {
+        // Can't initialize this in the field or it breaks in ESBuild's browser output
+        this.ipnsMock = new IPNSMock(this.mockttpServer)
+    }
 
     async start() {
         this.reset();
@@ -17,8 +22,8 @@ export class MockIPFSNode {
         await this.addBaseRules();
     }
 
-    stop() {
-        this.mockttpServer.stop();
+    async stop() {
+        await this.mockttpServer.stop();
     }
 
     reset() {
@@ -33,8 +38,6 @@ export class MockIPFSNode {
             port: this.mockttpServer.port
         };
     }
-
-    private ipnsMock = new IPNSMock(this.mockttpServer);
 
     private async addBaseRules() {
         this.ipnsMock.addMockttpFallbackRules();
