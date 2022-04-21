@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Tim Perry <tim@httptoolkit.tech>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { Mockttp, RulePriority } from "mockttp";
 
 import { IPNSActionBuilder } from "./ipns/ipns-rule-builder";
