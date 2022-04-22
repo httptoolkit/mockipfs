@@ -4,46 +4,29 @@
  */
 
 import * as Mockttp from "mockttp"
+import { buildIpfsFixedValueResponse } from "../utils/http";
 
 type MockttpRequestCallback = (request: Mockttp.CompletedRequest) =>
     Promise<Mockttp.requestHandlers.CallbackResponseResult>;
 
-const notFoundResponse = (name: string) => ({
-    status: 500,
-    headers: {
-        // This matches the IPFS headers, and it's also required to work around various
-        // Undici fetch + Mockttp minimal response bugs in Node 18
-        'transfer-encoding': 'chunked',
-        'connection': 'close'
-    },
-    json: {
-        Message: `queryTxt ENOTFOUND _dnslink.${name}`,
-        Code: 0,
-        Type: 'error'
-    }
+const notFoundResponse = (name: string) => buildIpfsFixedValueResponse(500, {
+    Message: `queryTxt ENOTFOUND _dnslink.${name}`,
+    Code: 0,
+    Type: 'error'
 });
 
-const badRequestResponse = (message: string) => ({
-    status: 400,
-    headers: {
-        // This matches the IPFS headers, and it's also required to work around various
-        // Undici fetch + Mockttp minimal response bugs in Node 18
-        'transfer-encoding': 'chunked',
-        'connection': 'close'
-    },
-    json: {
-        Message: message,
-        Code: 1,
-        Type: "error"
-    }
+const badRequestResponse = (message: string) => buildIpfsFixedValueResponse(400, {
+    Message: message,
+    Code: 1,
+    Type: "error"
 });
 
 const RESOLVE_PATHS = ['/api/v0/name/resolve', '/api/v0/resolve'];
 
 /**
- * Wraps a set of Mockttp rules, providing an API over them to query their collected
- * traffic, providing fallback rules for default behaviour, and adding base configuration
- * to new rules as they're added.
+ * Defines default behaviour for IPNS APIs, convenient methods for creating the rules
+ * from the rule-builder data, and query methods to find and expose relevant request
+ * data from a list of collected HTTP requests.
  */
 export class IPNSMock {
 
@@ -102,19 +85,10 @@ export class IPNSMock {
         const value = parsedURL.searchParams.get('arg')!;
         const name = parsedURL.searchParams.get('key');
 
-        return {
-            status: 200,
-            headers: {
-                // Workaround for https://github.com/nodejs/undici/issues/1414 in Node 18
-                'transfer-encoding': 'chunked',
-                // Workaround for https://github.com/nodejs/undici/issues/1415 in Node 18
-                'connection': 'keep-alive'
-            },
-            json: {
-                Name: name ?? 'self-ipns-key',
-                Value: value
-            }
-        };
+        return buildIpfsFixedValueResponse(200, {
+            Name: name ?? 'self-ipns-key',
+            Value: value
+        });
     };
 
     async getIPNSQueries(seenRequests: Mockttp.Request[]) {

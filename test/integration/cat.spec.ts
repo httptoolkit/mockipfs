@@ -7,7 +7,6 @@ import {
     expect,
     MockIPFS,
     IPFS,
-    HTTPError,
     itValue,
     delay
 } from '../test-setup';

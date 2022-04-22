@@ -5,6 +5,7 @@
 
 import { RequestRuleBuilder } from "mockttp";
 import { MockedIPFSEndpoint } from "./mocked-endpoint";
+import { buildIpfsStreamDefaultHeaders } from "./utils/http";
 
 export class CatRuleBuilder {
     constructor(
@@ -13,7 +14,7 @@ export class CatRuleBuilder {
 
     async thenReturn(rawData: string) {
         return new MockedIPFSEndpoint(
-            await this.httpRuleBuilder.thenReply(200, rawData)
+            await this.httpRuleBuilder.thenReply(200, rawData, buildIpfsStreamDefaultHeaders())
         );
     }
 

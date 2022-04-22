@@ -4,6 +4,7 @@
  */
 
 import * as Mockttp from "mockttp";
+import { IpfsFixedResponseHandlerDefinition } from "../utils/http";
 
 export class IPNSRuleBuilder {
 
@@ -23,42 +24,20 @@ export class IPNSRuleBuilder {
     thenResolveTo(path: string) {
         return this.addResolveRuleCallback({
             matchers: this.matchers,
-            handler: new Mockttp.requestHandlerDefinitions.SimpleHandlerDefinition(
-                200,
-                undefined,
-                JSON.stringify({
-                    Path: path
-                }),
-                {
-                    'content-type': 'application/json',
-                    // This matches the IPFS headers, and it's also required to work around various
-                    // Undici fetch + Mockttp minimal response bugs in Node 18
-                    'transfer-encoding': 'chunked',
-                    'connection': 'close'
-                }
-            )
+            handler: new IpfsFixedResponseHandlerDefinition(200, {
+                Path: path
+            })
         });
     }
 
     thenFailToResolve() {
         return this.addResolveRuleCallback({
             matchers: this.matchers,
-            handler: new Mockttp.requestHandlerDefinitions.SimpleHandlerDefinition(
-                200,
-                undefined,
-                JSON.stringify({
-                    Message: `queryTxt ENOTFOUND _dnslink.${this.name}`,
-                    Code: 0,
-                    Type: 'error'
-                }),
-                {
-                    'content-type': 'application/json',
-                    // This matches the IPFS headers, and it's also required to work around various
-                    // Undici fetch + Mockttp minimal response bugs in Node 18
-                    'transfer-encoding': 'chunked',
-                    'connection': 'close'
-                }
-            )
+            handler: new IpfsFixedResponseHandlerDefinition(500, {
+                Message: `queryTxt ENOTFOUND _dnslink.${this.name}`,
+                Code: 0,
+                Type: 'error'
+            })
         });
     }
 

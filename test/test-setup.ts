@@ -28,6 +28,9 @@ export {
     uint8ToString
 };
 
+export const EXAMPLE_CID = 'QmY7Yh4UquoXHLPFo2XbhXkhBvFoPwmQUSa92pxnxjQuPU';
+export const ALTERNATE_CID = 'QmY7Yh4UquoXHLPFo2XbhXkhBvFoPwmQUSa92pxnxjQABC';
+
 export const itValue = async <T>(asyncIterable: AsyncIterable<T>|Iterable<T>): Promise<T> => {
     const values = await itAll(asyncIterable);
 

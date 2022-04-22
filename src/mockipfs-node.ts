@@ -8,10 +8,14 @@ import * as Mockttp from "mockttp";
 import { CatRuleBuilder } from "./cat-rule-builder";
 import { IPNSRuleBuilder } from "./ipns/ipns-rule-builder";
 import { IPNSMock } from "./ipns/ipns-mock";
+import { PinningMock } from "./pinning/pinning-mock";
+import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
+import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
 
 export class MockIPFSNode {
 
     private ipnsMock: IPNSMock;
+    private pinningMock: PinningMock;
 
     private seenRequests: Mockttp.Request[] = []
 
@@ -19,7 +23,8 @@ export class MockIPFSNode {
         private mockttpServer: Mockttp.Mockttp,
     ) {
         // Can't initialize this in the field or it breaks in ESBuild's browser output
-        this.ipnsMock = new IPNSMock(this.mockttpServer);
+        this.ipnsMock = new IPNSMock(this.mockttpServer)
+        this.pinningMock = new PinningMock(this.mockttpServer);
     }
 
     async start() {
@@ -48,6 +53,7 @@ export class MockIPFSNode {
         await this.mockttpServer.on('request-initiated', this.onRequestInitiated);
 
         this.ipnsMock.addMockttpFallbackRules();
+        this.pinningMock.addMockttpFallbackRules();
 
         // The real default IPFS cat behaviour seems to be just timing out:
         this.mockttpServer.forPost('/api/v0/cat')
@@ -78,11 +84,33 @@ export class MockIPFSNode {
         );
     }
 
+    forPinAdd(cid?: string) {
+        return new PinAddRuleBuilder(
+            cid,
+            this.pinningMock.addPinAddRule
+        );
+    }
+
+    forPinRm(cid?: string) {
+        return new PinRmRuleBuilder(
+            cid,
+            this.pinningMock.addPinRmRule
+        );
+    }
+
     async getIPNSQueries(): Promise<Array<{ name: string | null }>> {
         return this.ipnsMock.getIPNSQueries(this.seenRequests);
     }
 
     async getIPNSPublications(): Promise<Array<{ name: string | null, value: string }>> {
         return this.ipnsMock.getIPNSPublications(this.seenRequests);
+    }
+
+    async getAddedPins(): Promise<Array<{ cid: string }>> {
+        return this.pinningMock.getAddedPins(this.seenRequests);
+    }
+
+    async getRemovedPins(): Promise<Array<{ cid: string }>> {
+        return this.pinningMock.getRemovedPins(this.seenRequests);
     }
 }
