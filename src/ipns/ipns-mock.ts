@@ -47,20 +47,12 @@ const RESOLVE_PATHS = ['/api/v0/name/resolve', '/api/v0/resolve'];
  */
 export class IPNSMock {
 
-    private activeResolveRules: Array<Mockttp.MockedEndpoint> = [];
-    private activePublishRules: Array<Mockttp.MockedEndpoint> = [];
-
     constructor(
         private mockttpServer: Mockttp.Mockttp
     ) {}
 
-    reset() {
-        this.activeResolveRules = [];
-        this.activePublishRules = [];
-    }
-
     async addMockttpFallbackRules() {
-        const [publishRule] = await Promise.all([
+        await Promise.all([
             this.mockttpServer.addRequestRules({
                 priority: Mockttp.RulePriority.FALLBACK,
                 matchers: [
@@ -71,30 +63,26 @@ export class IPNSMock {
                 handler: new Mockttp.requestHandlers.CallbackHandler(this.publishHandler)
             }),
 
-            this.addResolveAction({
+            this.addResolveRule({
                 priority: Mockttp.RulePriority.FALLBACK,
-                matchers: [],
+                matchers: [], // Both paths are added in addResolveRule
                 completionChecker: new Mockttp.completionCheckers.Always(),
                 handler: new Mockttp.requestHandlers.CallbackHandler(this.resolveHandler)
             })
         ]);
-
-        this.activePublishRules.push(...publishRule);
     }
 
-    addResolveAction = async (actionRuleData: Mockttp.RequestRuleData) => {
-        const rules = await this.mockttpServer.addRequestRules(
+    addResolveRule = async (ruleData: Mockttp.RequestRuleData) => {
+        await this.mockttpServer.addRequestRules(
             ...RESOLVE_PATHS.map((resolvePath) => ({
-                ...actionRuleData,
+                ...ruleData,
                 matchers: [
-                    ...actionRuleData.matchers,
+                    ...ruleData.matchers,
                     new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
                     new Mockttp.matchers.SimplePathMatcher(resolvePath)
                 ]
             }))
         );
-
-        this.activeResolveRules.push(...rules);
     };
 
     resolveHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
@@ -129,29 +117,23 @@ export class IPNSMock {
         };
     };
 
-    async getIPNSQueries() {
-        const seenResolveRequests = (await Promise.all(
-            this.activeResolveRules
-            .map((rule) => rule.getSeenRequests())
-        )).flat();
+    async getIPNSQueries(seenRequests: Mockttp.Request[]) {
+        const relevantRequests = seenRequests
+            .filter((request) =>
+                RESOLVE_PATHS.some(resolvePath => request.path.startsWith(resolvePath))
+            );
 
-        sortRequestsByStartTime(seenResolveRequests);
-
-        return seenResolveRequests.map((request) => {
+        return relevantRequests.map((request) => {
             const parsedURL = new URL(request.url)
             return { name: parsedURL.searchParams.get('arg') };
         });
     }
 
-    async getIPNSPublications() {
-        const seenPublishRequests = (await Promise.all(
-            this.activePublishRules
-            .map((rule) => rule.getSeenRequests())
-        )).flat();
+    async getIPNSPublications(seenRequests: Mockttp.Request[]) {
+        const relevantRequests = seenRequests
+            .filter((request) => request.path.startsWith('/api/v0/name/publish'));
 
-        sortRequestsByStartTime(seenPublishRequests);
-
-        return seenPublishRequests.map((request) => {
+        return relevantRequests.map((request) => {
             const parsedURL = new URL(request.url)
             return {
                 name: parsedURL.searchParams.get('key'),
@@ -160,10 +142,4 @@ export class IPNSMock {
         });
     }
 
-}
-
-function sortRequestsByStartTime(requests: Mockttp.CompletedRequest[]) {
-    requests.sort((r1, r2) =>
-        (r1.timingEvents as Mockttp.TimingEvents).startTime - (r2.timingEvents as Mockttp.TimingEvents).startTime
-    );
 }

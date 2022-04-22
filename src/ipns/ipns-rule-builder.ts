@@ -5,7 +5,7 @@
 
 import * as Mockttp from "mockttp";
 
-export class IPNSActionBuilder {
+export class IPNSRuleBuilder {
 
     constructor(
         private name: string | undefined,
