@@ -10,7 +10,8 @@ import {
     HTTPError,
     delay,
     EXAMPLE_CID,
-    ALTERNATE_CID
+    ALTERNATE_CID,
+    itAll
 } from '../test-setup';
 
 describe("IPFS pin mocking", () => {
@@ -135,6 +136,78 @@ describe("IPFS pin mocking", () => {
             expect(await mockNode.getRemovedPins()).to.deep.equal([
                 { cid: EXAMPLE_CID },
                 { cid: ALTERNATE_CID }
+            ]);
+        });
+
+    });
+
+    describe("for ls", () => {
+
+        it("should return an empty list when listing pins by default", async () => {
+            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+            const result = await itAll(ipfsClient.pin.ls());
+
+            expect(result).to.deep.equal([]);
+        });
+
+        it("should allow mocking the list of pinned hashes", async () => {
+            await mockNode.forPinLs().thenReturn([
+                { type: 'recursive', cid: EXAMPLE_CID },
+                { type: 'indirect', cid: ALTERNATE_CID }
+            ]);
+
+            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+            const result = await itAll(ipfsClient.pin.ls());
+
+            expect(
+                result.map(({ type, cid }) => ({ type, cid: cid.toString() }))
+            ).to.deep.equal([
+                { type: 'recursive', cid: EXAMPLE_CID },
+                { type: 'indirect', cid: ALTERNATE_CID }
+            ]);
+        });
+
+        it("should support filtering when mocking the list of pinned hashes", async () => {
+            await mockNode.forPinLs().thenReturn([
+                { type: 'recursive', cid: ALTERNATE_CID },
+                { type: 'direct', cid: EXAMPLE_CID },
+                { type: 'indirect', cid: ALTERNATE_CID }
+            ]);
+
+            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+            const result = await itAll(ipfsClient.pin.ls({
+                type: 'direct'
+            }));
+
+            expect(
+                result.map(({ type, cid }) => ({ type, cid: cid.toString() }))
+            ).to.deep.equal([
+                { type: 'direct', cid: EXAMPLE_CID }
+            ]);
+        });
+
+        it("should support filtering for 'all' when mocking the list of pinned hashes", async () => {
+            await mockNode.forPinLs().thenReturn([
+                { type: 'recursive', cid: EXAMPLE_CID },
+                { type: 'direct', cid: EXAMPLE_CID },
+                { type: 'indirect', cid: EXAMPLE_CID }
+            ]);
+
+            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+            const result = await itAll(ipfsClient.pin.ls({
+                type: 'all'
+            }));
+
+            expect(
+                result.map(({ type, cid }) => ({ type, cid: cid.toString() }))
+            ).to.deep.equal([
+                { type: 'recursive', cid: EXAMPLE_CID },
+                { type: 'direct', cid: EXAMPLE_CID },
+                { type: 'indirect', cid: EXAMPLE_CID }
             ]);
         });
 

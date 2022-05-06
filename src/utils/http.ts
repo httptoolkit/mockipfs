@@ -55,12 +55,12 @@ export const buildIpfsFixedValueResponse = (status: number, json: any) => {
     }
 };
 
-export const buildIpfsSingleValueStreamResponse = (status: number, json: any) => {
-    const jsonBody = JSON.stringify(json);
+export const buildIpfsStreamResponse = (status: number, ...jsonValues: Array<any>) => {
+    const body = jsonValues.map(json => JSON.stringify(json)).join('\n');
     return {
         status,
         headers: buildIpfsStreamDefaultHeaders(),
-        body: jsonBody
+        body: body
     }
 };
 
@@ -75,13 +75,13 @@ export class IpfsFixedResponseHandlerDefinition extends requestHandlerDefinition
     }
 };
 
-export class IpfsSingleValueStreamHandlerDefinition extends requestHandlerDefinitions.SimpleHandlerDefinition {
+export class IpfsStreamHandlerDefinition extends requestHandlerDefinitions.SimpleHandlerDefinition {
 
     constructor(
         status: number,
-        json: any
+        ...jsonValues: Array<any>
     ) {
-        const jsonBody = JSON.stringify(json);
-        super(status, undefined, jsonBody, buildIpfsStreamDefaultHeaders());
+        const body = jsonValues.map(json => JSON.stringify(json)).join('\n');
+        super(status, undefined, body, buildIpfsStreamDefaultHeaders());
     }
 };

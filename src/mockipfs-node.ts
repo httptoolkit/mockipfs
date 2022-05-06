@@ -14,6 +14,7 @@ import { NameResolveRuleBuilder } from "./ipns/name-resolve-rule-builder";
 import { PinningMock } from "./pinning/pinning-mock";
 import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
 import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
+import { PinLsRuleBuilder } from "./pinning/pin-ls-rule-builder";
 
 export class MockIPFSNode {
 
@@ -105,6 +106,12 @@ export class MockIPFSNode {
         return new PinRmRuleBuilder(
             cid,
             this.pinningMock.addPinRmRule
+        );
+    }
+
+    forPinLs() {
+        return new PinLsRuleBuilder(
+            this.pinningMock.addPinLsRule
         );
     }
 

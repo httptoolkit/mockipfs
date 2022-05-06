@@ -4,7 +4,7 @@
  */
 
 import * as Mockttp from "mockttp"
-import { buildIpfsFixedValueResponse } from "../utils/http";
+import { buildIpfsFixedValueResponse, IpfsStreamHandlerDefinition } from "../utils/http";
 
 type MockttpRequestCallback = (request: Mockttp.CompletedRequest) =>
     Promise<Mockttp.requestHandlers.CallbackResponseResult>;
@@ -39,6 +39,15 @@ export class PinningMock {
                 ],
                 completionChecker: new Mockttp.completionCheckers.Always(),
                 handler: new Mockttp.requestHandlers.CallbackHandler(this.defaultAddRmHandler)
+            }),
+            this.mockttpServer.addRequestRules({
+                priority: Mockttp.RulePriority.FALLBACK,
+                matchers: [
+                    new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                    new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/ls')
+                ],
+                completionChecker: new Mockttp.completionCheckers.Always(),
+                handler: new IpfsStreamHandlerDefinition(200)
             })
         ]);
     }
@@ -69,6 +78,17 @@ export class PinningMock {
                 ...ruleData.matchers,
                 new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
                 new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/rm')
+            ]
+        });
+    };
+
+    addPinLsRule = async (ruleData: Mockttp.RequestRuleData) => {
+        await this.mockttpServer.addRequestRules({
+            ...ruleData,
+            matchers: [
+                ...ruleData.matchers,
+                new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/ls')
             ]
         });
     };
