@@ -124,6 +124,20 @@ describe("IPNS mocking", () => {
         expect(result).to.deep.equal({ name: 'ipns-hash', value: '/ipfs/content' });
     });
 
+    it("can accept name publications with an explicit CID", async () => {
+        await mockNode.forNamePublish()
+            .withContent('/ipfs/matching-content')
+            .thenAcceptPublishAs("matched-hash");
+
+        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+
+        const otherResult = await ipfsClient.name.publish('/ipfs/other-content');
+        const contentResult = await ipfsClient.name.publish('/ipfs/matching-content');
+
+        expect(otherResult).to.deep.equal({ name: 'mock-ipns-name', value: '/ipfs/other-content' });
+        expect(contentResult).to.deep.equal({ name: 'matched-hash', value: '/ipfs/matching-content' });
+    });
+
     it("can match 'self' name publication", async () => {
         await mockNode.forNamePublish('self').thenAcceptPublishAs('self-name');
 
