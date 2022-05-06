@@ -6,8 +6,11 @@
 import * as Mockttp from "mockttp";
 
 import { CatRuleBuilder } from "./cat-rule-builder";
-import { IPNSRuleBuilder } from "./ipns/ipns-rule-builder";
+
 import { IPNSMock } from "./ipns/ipns-mock";
+import { NamePublishRuleBuilder } from "./ipns/name-publish-rule-builder";
+import { NameResolveRuleBuilder } from "./ipns/name-resolve-rule-builder";
+
 import { PinningMock } from "./pinning/pinning-mock";
 import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
 import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
@@ -77,10 +80,17 @@ export class MockIPFSNode {
         return new CatRuleBuilder(catRuleBuilder);
     }
 
-    forName(name?: string) {
-        return new IPNSRuleBuilder(
+    forNameResolve(name?: string) {
+        return new NameResolveRuleBuilder(
             name,
             this.ipnsMock.addResolveRule
+        );
+    }
+
+    forNamePublish(nameKey?: string) {
+        return new NamePublishRuleBuilder(
+            nameKey,
+            this.ipnsMock.addPublishRule
         );
     }
 

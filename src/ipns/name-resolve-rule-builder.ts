@@ -4,13 +4,13 @@
  */
 
 import * as Mockttp from "mockttp";
-import { IpfsFixedResponseHandlerDefinition } from "../utils/http";
+import {  IpfsFixedResponseHandlerDefinition } from "../utils/http";
 
-export class IPNSRuleBuilder {
+export class NameResolveRuleBuilder {
 
     constructor(
         private name: string | undefined,
-        private addResolveRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
+        private addRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
     ) {
         if (name) {
             this.matchers.push(new Mockttp.matchers.QueryMatcher({ arg: name }));
@@ -22,7 +22,7 @@ export class IPNSRuleBuilder {
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
     thenResolveTo(path: string) {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: new IpfsFixedResponseHandlerDefinition(200, {
                 Path: path
@@ -31,7 +31,7 @@ export class IPNSRuleBuilder {
     }
 
     thenFailToResolve() {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: new IpfsFixedResponseHandlerDefinition(500, {
                 Message: `queryTxt ENOTFOUND _dnslink.${this.name}`,
@@ -42,7 +42,7 @@ export class IPNSRuleBuilder {
     }
 
     thenTimeout() {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: new Mockttp.requestHandlerDefinitions.TimeoutHandlerDefinition()
         });

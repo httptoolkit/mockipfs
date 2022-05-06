@@ -5,7 +5,6 @@
 
 import * as Mockttp from "mockttp";
 import {
-    buildIpfsFixedValueDefaultHeaders,
     buildIpfsFixedValueResponse,
     IpfsFixedResponseHandlerDefinition
 } from "../utils/http";
@@ -14,7 +13,7 @@ export class PinAddRuleBuilder {
 
     constructor(
         private cid: string | undefined,
-        private addResolveRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
+        private addRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
     ) {
         if (cid) {
             this.matchers.push(new Mockttp.matchers.QueryMatcher({ arg: cid }));
@@ -26,7 +25,7 @@ export class PinAddRuleBuilder {
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
     thenPinSuccessfully() {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: this.cid
                 ? new IpfsFixedResponseHandlerDefinition(200, {
@@ -41,7 +40,7 @@ export class PinAddRuleBuilder {
     }
 
     thenTimeoutAsUnavailable() {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: new Mockttp.requestHandlerDefinitions.TimeoutHandlerDefinition()
         });

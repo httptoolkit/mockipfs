@@ -43,17 +43,28 @@ export class IPNSMock {
                     new Mockttp.matchers.SimplePathMatcher('/api/v0/name/publish')
                 ],
                 completionChecker: new Mockttp.completionCheckers.Always(),
-                handler: new Mockttp.requestHandlers.CallbackHandler(this.publishHandler)
+                handler: new Mockttp.requestHandlers.CallbackHandler(this.fallbackPublishHandler)
             }),
 
             this.addResolveRule({
                 priority: Mockttp.RulePriority.FALLBACK,
                 matchers: [], // Both paths are added in addResolveRule
                 completionChecker: new Mockttp.completionCheckers.Always(),
-                handler: new Mockttp.requestHandlers.CallbackHandler(this.resolveHandler)
+                handler: new Mockttp.requestHandlers.CallbackHandler(this.fallbackResolveHandler)
             })
         ]);
     }
+
+    addPublishRule = async (ruleData: Mockttp.RequestRuleData) => {
+        await this.mockttpServer.addRequestRules({
+            ...ruleData,
+            matchers: [
+                ...ruleData.matchers,
+                new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                new Mockttp.matchers.SimplePathMatcher('/api/v0/name/publish')
+            ]
+        });
+    };
 
     addResolveRule = async (ruleData: Mockttp.RequestRuleData) => {
         await this.mockttpServer.addRequestRules(
@@ -68,7 +79,7 @@ export class IPNSMock {
         );
     };
 
-    resolveHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
+    private fallbackResolveHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
         const parsedURL = new URL(request.url);
         const name = parsedURL.searchParams.get('arg');
 
@@ -79,14 +90,14 @@ export class IPNSMock {
         return notFoundResponse(name);
     };
 
-    publishHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
-        const parsedURL = new URL(request.url);
+    private fallbackPublishHandler: MockttpRequestCallback = async (req: Mockttp.CompletedRequest) => {
+        const parsedURL = new URL(req.url);
 
         const value = parsedURL.searchParams.get('arg')!;
-        const name = parsedURL.searchParams.get('key');
 
         return buildIpfsFixedValueResponse(200, {
-            Name: name ?? 'self-ipns-key',
+            // We can't guess the name (the CID for the given key) so we return a mock string
+            Name: 'mock-ipns-name',
             Value: value
         });
     };

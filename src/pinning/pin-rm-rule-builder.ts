@@ -13,7 +13,7 @@ export class PinRmRuleBuilder {
 
     constructor(
         private cid: string | undefined,
-        private addResolveRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
+        private addRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
     ) {
         if (cid) {
             this.matchers.push(new Mockttp.matchers.QueryMatcher({ arg: cid }));
@@ -25,7 +25,7 @@ export class PinRmRuleBuilder {
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
     thenRemoveSuccessfully() {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: this.cid
                 ? new IpfsFixedResponseHandlerDefinition(200, {
@@ -40,7 +40,7 @@ export class PinRmRuleBuilder {
     }
 
     thenFailAsMissing() {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: this.cid
                 ? new IpfsFixedResponseHandlerDefinition(500, {
@@ -62,7 +62,7 @@ export class PinRmRuleBuilder {
     }
 
     thenTimeout() {
-        return this.addResolveRuleCallback({
+        return this.addRuleCallback({
             matchers: this.matchers,
             handler: new Mockttp.requestHandlerDefinitions.TimeoutHandlerDefinition()
         });
