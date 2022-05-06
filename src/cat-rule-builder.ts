@@ -23,4 +23,10 @@ export class CatRuleBuilder {
             await this.httpRuleBuilder.thenTimeout()
         );
     }
+
+    async thenCloseConnection() {
+        return new MockedIPFSEndpoint(
+            await this.httpRuleBuilder.thenCloseConnection()
+        );
+    }
 }

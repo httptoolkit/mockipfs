@@ -48,4 +48,11 @@ export class NameResolveRuleBuilder {
         });
     }
 
+    thenCloseConnection() {
+        return this.addRuleCallback({
+            matchers: this.matchers,
+            handler: new Mockttp.requestHandlerDefinitions.CloseConnectionHandlerDefinition()
+        });
+    }
+
 }
