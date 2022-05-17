@@ -15,13 +15,16 @@ import { PinningMock } from "./pinning/pinning-mock";
 import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
 import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
 import { PinLsRuleBuilder } from "./pinning/pin-ls-rule-builder";
+import { AddMock } from "./add/add-mock";
+import { AddRuleBuilder } from "./add/add-rule-builder";
 
 export class MockIPFSNode {
 
     private ipnsMock: IPNSMock;
     private pinningMock: PinningMock;
+    private addMock: AddMock;
 
-    private seenRequests: Mockttp.Request[] = []
+    private seenRequests: Mockttp.CompletedRequest[] = []
 
     constructor(
         private mockttpServer: Mockttp.Mockttp,
@@ -29,6 +32,7 @@ export class MockIPFSNode {
         // Can't initialize this in the field or it breaks in ESBuild's browser output
         this.ipnsMock = new IPNSMock(this.mockttpServer)
         this.pinningMock = new PinningMock(this.mockttpServer);
+        this.addMock = new AddMock(this.mockttpServer);
     }
 
     async start() {
@@ -54,18 +58,21 @@ export class MockIPFSNode {
     }
 
     private async addBaseRules() {
-        await this.mockttpServer.on('request-initiated', this.onRequestInitiated);
+        await Promise.all([
+            this.mockttpServer.on('request', this.onRequest),
 
-        this.ipnsMock.addMockttpFallbackRules();
-        this.pinningMock.addMockttpFallbackRules();
+            this.ipnsMock.addMockttpFallbackRules(),
+            this.pinningMock.addMockttpFallbackRules(),
+            this.addMock.addMockttpFallbackRules(),
 
-        // The real default IPFS cat behaviour seems to be just timing out:
-        this.mockttpServer.forPost('/api/v0/cat')
-            .asPriority(Mockttp.RulePriority.FALLBACK)
-            .thenTimeout();
+            // The real default IPFS cat behaviour seems to be just timing out:
+            this.mockttpServer.forPost('/api/v0/cat')
+                .asPriority(Mockttp.RulePriority.FALLBACK)
+                .thenTimeout()
+        ]);
     }
 
-    private onRequestInitiated = (request: Mockttp.InitiatedRequest) => {
+    private onRequest = (request: Mockttp.CompletedRequest) => {
         if (request.path.startsWith('/api/v0')) {
             this.seenRequests.push(request);
         }
@@ -79,6 +86,17 @@ export class MockIPFSNode {
         }
 
         return new CatRuleBuilder(catRuleBuilder);
+    }
+
+    forAdd(...content: Array<
+        | string
+        | Uint8Array
+        | { path: string, content?: string | Uint8Array }
+    >) {
+        return new AddRuleBuilder(
+            content,
+            this.addMock.addAddRule
+        );
     }
 
     forNameResolve(name?: string) {
@@ -113,6 +131,10 @@ export class MockIPFSNode {
         return new PinLsRuleBuilder(
             this.pinningMock.addPinLsRule
         );
+    }
+
+    async getAddedContent(): Promise<Array<{ path?: string, content?: Uint8Array }>> {
+        return this.addMock.getAddedContent(this.seenRequests);
     }
 
     async getIPNSQueries(): Promise<Array<{ name: string | null }>> {

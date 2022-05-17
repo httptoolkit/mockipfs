@@ -19,3 +19,5 @@ export function getRemote(options?: mockttp.MockttpClientOptions) {
 export function getAdminServer(options?: mockttp.MockttpAdminServerOptions) {
     return mockttp.getAdminServer(options);
 }
+
+export { mockCid } from './utils/ipfs';
