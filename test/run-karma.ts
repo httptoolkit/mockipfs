@@ -8,13 +8,18 @@ import * as karma from 'karma';
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 
+import { ipfsNodePromise } from './run-test-ipfs-node';
+
 const CONTINUOUS = process.env.CONTINUOUS_TEST === 'true';
 const HEADFUL = process.env.HEADFUL_TEST === 'true';
 
 import * as MockIPFS from '../src/main';
 const adminServer = MockIPFS.getAdminServer();
 
-adminServer.start().then(async () => {
+Promise.all([
+    ipfsNodePromise,
+    adminServer.start()
+]).then(async ([ipfsNode]) => {
     const config = await karma.config.parseConfig(undefined, {
         frameworks: ['mocha', 'chai'],
         files: [
@@ -27,7 +32,13 @@ adminServer.start().then(async () => {
         esbuild: {
             format: 'esm',
             target: 'esnext',
-            external: ['http-encoding'],
+            define: {
+                IPFS_NODE_ADDRESS: JSON.stringify(ipfsNode.httpUrl)
+            },
+            external: [
+                'http-encoding',
+                './run-test-ipfs-node'
+            ],
             plugins: [
                 NodeModulesPolyfillPlugin(),
                 NodeGlobalsPolyfillPlugin({
@@ -56,7 +67,10 @@ adminServer.start().then(async () => {
     } as karma.ConfigOptions, { throwErrors: true });
 
     const karmaServer = new karma.Server(config, async () => {
-        await adminServer.stop();
+        await Promise.all([
+            ipfsNode.shutdown(),
+            adminServer.stop()
+        ])
     });
 
     await karmaServer.start();

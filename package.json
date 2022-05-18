@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/httptoolkit/mockipfs#readme",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   },
   "peerDependencies": {
     "mockttp": "^3.1.0"
@@ -47,6 +47,8 @@
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
     "esbuild": "^0.14.38",
+    "ipfs": "^0.62.3",
+    "ipfs-core-types": "^0.10.3",
     "ipfs-http-client": "^54.0.2",
     "ipfs-utils": "^9.0.5",
     "it-all": "^1.0.6",

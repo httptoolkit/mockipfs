@@ -6,7 +6,7 @@
 import {
     expect,
     MockIPFS,
-    IPFS,
+    IpfsClient,
     HTTPError,
     delay,
     EXAMPLE_CID,
@@ -24,7 +24,7 @@ describe("IPFS pin mocking", () => {
     describe("for addition", () => {
 
         it("should return success for additions by default", async () => {
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = await ipfsClient.pin.add(EXAMPLE_CID);
 
@@ -34,7 +34,7 @@ describe("IPFS pin mocking", () => {
         it("should allow timing out for a CID to simulate pinning missing content", async () => {
             await mockNode.forPinAdd(EXAMPLE_CID).thenTimeoutAsUnavailable();
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             const result = ipfsClient.pin.add(EXAMPLE_CID);
 
             expect(await Promise.race([
@@ -46,7 +46,7 @@ describe("IPFS pin mocking", () => {
         it("should allow timing out for all CIDs to simulate pinning missing content", async () => {
             await mockNode.forPinAdd().thenTimeoutAsUnavailable();
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             const result = ipfsClient.pin.add(EXAMPLE_CID);
 
             expect(await Promise.race([
@@ -59,7 +59,7 @@ describe("IPFS pin mocking", () => {
             await mockNode.forPinAdd(EXAMPLE_CID).thenPinSuccessfully();
             await mockNode.forPinAdd().thenTimeoutAsUnavailable();
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             const timeoutResult = ipfsClient.pin.add(ALTERNATE_CID);
             const successResult = ipfsClient.pin.add(EXAMPLE_CID);
 
@@ -73,7 +73,7 @@ describe("IPFS pin mocking", () => {
         it("should allow querying the list of added pins", async () => {
             await mockNode.forPinAdd(EXAMPLE_CID).thenPinSuccessfully();
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             await Promise.all([
                 ipfsClient.pin.add(EXAMPLE_CID),
                 ipfsClient.pin.add(ALTERNATE_CID),
@@ -90,7 +90,7 @@ describe("IPFS pin mocking", () => {
     describe("for rm", () => {
 
         it("should return success for removal by default", async () => {
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = await ipfsClient.pin.rm(EXAMPLE_CID);
 
@@ -100,7 +100,7 @@ describe("IPFS pin mocking", () => {
         it("should allow mocking pin rm failure", async () => {
             await mockNode.forPinRm(EXAMPLE_CID).thenFailAsMissing();
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = await ipfsClient.pin.rm(EXAMPLE_CID).catch(e => e);
 
@@ -114,7 +114,7 @@ describe("IPFS pin mocking", () => {
         it("can timeout pin removal resolution", async () => {
             await mockNode.forPinRm(EXAMPLE_CID).thenTimeout();
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = ipfsClient.pin.rm(EXAMPLE_CID);
 
@@ -127,7 +127,7 @@ describe("IPFS pin mocking", () => {
         it("should allow querying the list of removed pins", async () => {
             await mockNode.forPinRm(EXAMPLE_CID).thenRemoveSuccessfully();
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             await Promise.all([
                 ipfsClient.pin.rm(EXAMPLE_CID),
                 ipfsClient.pin.rm(ALTERNATE_CID),
@@ -144,7 +144,7 @@ describe("IPFS pin mocking", () => {
     describe("for ls", () => {
 
         it("should return an empty list when listing pins by default", async () => {
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = await itAll(ipfsClient.pin.ls());
 
@@ -157,7 +157,7 @@ describe("IPFS pin mocking", () => {
                 { type: 'indirect', cid: ALTERNATE_CID }
             ]);
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = await itAll(ipfsClient.pin.ls());
 
@@ -176,7 +176,7 @@ describe("IPFS pin mocking", () => {
                 { type: 'indirect', cid: ALTERNATE_CID }
             ]);
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = await itAll(ipfsClient.pin.ls({
                 type: 'direct'
@@ -196,7 +196,7 @@ describe("IPFS pin mocking", () => {
                 { type: 'indirect', cid: EXAMPLE_CID }
             ]);
 
-            const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
             const result = await itAll(ipfsClient.pin.ls({
                 type: 'all'

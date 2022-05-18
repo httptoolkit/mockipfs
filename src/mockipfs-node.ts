@@ -18,6 +18,12 @@ import { PinLsRuleBuilder } from "./pinning/pin-ls-rule-builder";
 import { AddMock } from "./add/add-mock";
 import { AddRuleBuilder } from "./add/add-rule-builder";
 
+export interface MockIPFSOptions {
+    unmatchedRequests?:
+        | 'stub'
+        | { proxyTo: string }
+}
+
 export class MockIPFSNode {
 
     private ipnsMock: IPNSMock;
@@ -28,6 +34,7 @@ export class MockIPFSNode {
 
     constructor(
         private mockttpServer: Mockttp.Mockttp,
+        private options: MockIPFSOptions = {}
     ) {
         // Can't initialize this in the field or it breaks in ESBuild's browser output
         this.ipnsMock = new IPNSMock(this.mockttpServer)
@@ -61,14 +68,21 @@ export class MockIPFSNode {
         await Promise.all([
             this.mockttpServer.on('request', this.onRequest),
 
-            this.ipnsMock.addMockttpFallbackRules(),
-            this.pinningMock.addMockttpFallbackRules(),
-            this.addMock.addMockttpFallbackRules(),
+            ...(!this.options.unmatchedRequests || this.options.unmatchedRequests === 'stub'
+            ? [
+                this.ipnsMock.addMockttpFallbackRules(),
+                this.pinningMock.addMockttpFallbackRules(),
+                this.addMock.addMockttpFallbackRules(),
 
-            // The real default IPFS cat behaviour seems to be just timing out:
-            this.mockttpServer.forPost('/api/v0/cat')
-                .asPriority(Mockttp.RulePriority.FALLBACK)
-                .thenTimeout()
+                // The real default IPFS cat behaviour seems to be just timing out:
+                this.mockttpServer.forPost('/api/v0/cat')
+                    .asPriority(Mockttp.RulePriority.FALLBACK)
+                    .thenTimeout()
+            ]
+            : [
+                this.mockttpServer.forUnmatchedRequest()
+                    .thenForwardTo(this.options.unmatchedRequests.proxyTo)
+            ])
         ]);
     }
 

@@ -8,7 +8,8 @@ globalThis.AbortController ??= AbortController;
 
 import { expect } from "chai";
 
-import * as IPFS from "ipfs-http-client";
+import type * as IPFS from "ipfs";
+import * as IpfsClient from "ipfs-http-client";
 
 import itAll = require('it-all');
 import {
@@ -19,10 +20,11 @@ import {
 export { HTTPError } from "ipfs-utils/src/http";
 
 import * as MockIPFS from '../src/main';
+import { isNode } from "../src/utils/util";
 export {
     expect,
     MockIPFS,
-    IPFS,
+    IpfsClient,
     itAll,
     uint8ArrayConcat,
     uint8ToString
@@ -45,3 +47,25 @@ export const itValue = async <T>(asyncIterable: AsyncIterable<T>|Iterable<T>): P
 
 export const delay = (durationMs: number) =>
     new Promise((resolve) => setTimeout(resolve, durationMs));
+
+export type RealIpfsClient = IPFS.IPFS | IpfsClient.IPFSHTTPClient;
+export let realIpfsNodePromise: Promise<RealIpfsClient>;
+
+if (isNode) {
+    // We start a real IPFS node in-process, for proxy tests, but we don't wait
+    // for startup until the proxy test itself
+    let nodeSetupPromise = import('./run-test-ipfs-node')
+        .then(m => m.ipfsNodePromise);
+
+    realIpfsNodePromise = nodeSetupPromise.then(({ node }) => node);
+
+    after(async () => {
+        await (await nodeSetupPromise).shutdown();
+    });
+} else {
+    // In the browser, this is launched & shutdown independently by Karma, we just create a client:
+    realIpfsNodePromise = Promise.resolve(
+        IpfsClient.create({ url: IPFS_NODE_ADDRESS })
+    );
+}
+declare const IPFS_NODE_ADDRESS: string; // Inject in browsers by Esbuild via Karma

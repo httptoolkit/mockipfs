@@ -6,7 +6,7 @@
 import {
     expect,
     MockIPFS,
-    IPFS,
+    IpfsClient,
     delay,
     itAll
 } from '../test-setup';
@@ -19,7 +19,7 @@ describe("IPFS add mocking", () => {
     afterEach(() => mockNode.stop());
 
     it("accepts all content additions by default", async () => {
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const result = await ipfsClient.add("test content");
 
@@ -28,7 +28,7 @@ describe("IPFS add mocking", () => {
     });
 
     it("accepts all content additions wtih explicit paths by default", async () => {
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const result = await ipfsClient.add({ path: 'test-path', content: 'test content' });
 
@@ -42,7 +42,7 @@ describe("IPFS add mocking", () => {
         await mockNode.forAdd().thenCloseConnection();
         // ^-- We add this to make sure the rule is applied, not default behaviour
 
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const result = await ipfsClient.add('test content');
 
@@ -53,7 +53,7 @@ describe("IPFS add mocking", () => {
     it("can explicitly accept content addition with custom hash", async () => {
         await mockNode.forAdd().thenAcceptPublishAs(MockIPFS.mockCid('injectedXipfsXhash'));
 
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const result = await ipfsClient.add('test content');
 
@@ -67,7 +67,7 @@ describe("IPFS add mocking", () => {
             { Name: 'test2', Hash: MockIPFS.mockCid('anotherXipfsXhash') },
         ]);
 
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const results = await itAll(ipfsClient.addAll([
             'test content1',
@@ -85,7 +85,7 @@ describe("IPFS add mocking", () => {
     it("can timeout content addition", async () => {
         await mockNode.forAdd().thenTimeout();
 
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const publish = ipfsClient.add('test content');
 
@@ -99,7 +99,7 @@ describe("IPFS add mocking", () => {
         await mockNode.forAddIncluding('matching content')
             .thenAcceptPublishAs(MockIPFS.mockCid('matched'));
 
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const matchingResult = await ipfsClient.add('matching content');
         const otherResult = await ipfsClient.add('other content');
@@ -114,7 +114,7 @@ describe("IPFS add mocking", () => {
         await mockNode.forAddIncluding({ path: 'test/doc.txt' })
             .thenAcceptPublishAs(MockIPFS.mockCid('matched'));
 
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const matchingResult = await ipfsClient.add({ path: 'test/doc.txt' });
         const otherResult = await ipfsClient.add('other content');
@@ -129,7 +129,7 @@ describe("IPFS add mocking", () => {
         await mockNode.forAddIncluding({ path: 'matching.txt', content: 'matching' })
             .thenAcceptPublishAs(MockIPFS.mockCid('matched'));
 
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         const matchingResult = await ipfsClient.add({ path: 'matching.txt', content: 'matching' });
         const otherContentResult = await ipfsClient.add({ path: 'matching.txt', content: 'other' });
@@ -143,7 +143,7 @@ describe("IPFS add mocking", () => {
     });
 
     it("can record content addition", async () => {
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
         await ipfsClient.add("bare content a");
         await itAll(ipfsClient.addAll([

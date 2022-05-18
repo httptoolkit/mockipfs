@@ -6,7 +6,7 @@
 import {
     expect,
     MockIPFS,
-    IPFS,
+    IpfsClient,
     itAll,
     uint8ArrayConcat,
     uint8ToString
@@ -26,7 +26,7 @@ describe("MockIPFS", () => {
         const catMock = await mockNode.forCat(ipfsPath).thenReturn("Mock content");
 
         // Lookup some content with a real IPFS client:
-        const ipfsClient = IPFS.create(mockNode.ipfsOptions);
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
         const content = await itAll(ipfsClient.cat(ipfsPath));
 
         // Assert on the response:

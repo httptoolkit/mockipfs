@@ -5,15 +5,16 @@
 
 import * as mockttp from 'mockttp';
 import {
-    MockIPFSNode
+    MockIPFSNode,
+    MockIPFSOptions
 } from './mockipfs-node';
 
-export function getLocal(options?: mockttp.MockttpOptions) {
-    return new MockIPFSNode(mockttp.getLocal(options));
+export function getLocal(options?: mockttp.MockttpOptions & MockIPFSOptions) {
+    return new MockIPFSNode(mockttp.getLocal(options), options);
 }
 
-export function getRemote(options?: mockttp.MockttpClientOptions) {
-    return new MockIPFSNode(mockttp.getRemote(options));
+export function getRemote(options?: mockttp.MockttpClientOptions & MockIPFSOptions) {
+    return new MockIPFSNode(mockttp.getRemote(options), options);
 }
 
 export function getAdminServer(options?: mockttp.MockttpAdminServerOptions) {
@@ -21,3 +22,8 @@ export function getAdminServer(options?: mockttp.MockttpAdminServerOptions) {
 }
 
 export { mockCid } from './utils/ipfs';
+
+export type {
+    MockIPFSNode,
+    MockIPFSOptions
+};
