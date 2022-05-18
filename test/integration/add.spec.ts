@@ -96,7 +96,7 @@ describe("IPFS add mocking", () => {
     });
 
     it("can match specific content addition", async () => {
-        await mockNode.forAdd('matching content')
+        await mockNode.forAddIncluding('matching content')
             .thenAcceptPublishAs(MockIPFS.mockCid('matched'));
 
         const ipfsClient = IPFS.create(mockNode.ipfsOptions);
@@ -111,7 +111,7 @@ describe("IPFS add mocking", () => {
     });
 
     it("can match specific path addition", async () => {
-        await mockNode.forAdd({ path: 'test/doc.txt' })
+        await mockNode.forAddIncluding({ path: 'test/doc.txt' })
             .thenAcceptPublishAs(MockIPFS.mockCid('matched'));
 
         const ipfsClient = IPFS.create(mockNode.ipfsOptions);
@@ -126,7 +126,7 @@ describe("IPFS add mocking", () => {
     });
 
     it("can match specific path & content addition", async () => {
-        await mockNode.forAdd({ path: 'matching.txt', content: 'matching' })
+        await mockNode.forAddIncluding({ path: 'matching.txt', content: 'matching' })
             .thenAcceptPublishAs(MockIPFS.mockCid('matched'));
 
         const ipfsClient = IPFS.create(mockNode.ipfsOptions);

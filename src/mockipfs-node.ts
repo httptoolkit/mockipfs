@@ -88,7 +88,11 @@ export class MockIPFSNode {
         return new CatRuleBuilder(catRuleBuilder);
     }
 
-    forAdd(...content: Array<
+    forAdd() {
+        return this.forAddIncluding();
+    }
+
+    forAddIncluding(...content: Array<
         | string
         | Uint8Array
         | { path: string, content?: string | Uint8Array }
