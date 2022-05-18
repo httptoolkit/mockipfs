@@ -19,7 +19,7 @@ module.exports = function(config: any) {
         esbuild: {
             format: 'esm',
             target: 'esnext',
-            external: ['brotli-wasm'],
+            external: ['http-encoding'],
             plugins: [
                 NodeModulesPolyfillPlugin(),
                 NodeGlobalsPolyfillPlugin({
