@@ -14,7 +14,8 @@
     "test:node": "mocha -r ts-node/register 'test/**/*.spec.ts'",
     "test:browser": "ts-node test/run-karma.ts",
     "test:browser:dev": "CONTINUOUS_TEST=true npm run test:browser",
-    "test:browser:debug": "HEADFUL_TEST=true CONTINUOUS_TEST=true npm run test:browser"
+    "test:browser:debug": "HEADFUL_TEST=true CONTINUOUS_TEST=true npm run test:browser",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
