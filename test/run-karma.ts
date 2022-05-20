@@ -1,13 +1,21 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Tim Perry <tim@httptoolkit.tech>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import * as karma from 'karma';
+
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 
 const CONTINUOUS = process.env.CONTINUOUS_TEST === 'true';
 const HEADFUL = process.env.HEADFUL_TEST === 'true';
 
-require('./test/start-test-admin-server');
+import * as MockIPFS from '../src/main';
+const adminServer = MockIPFS.getAdminServer();
 
-module.exports = function(config: any) {
-    config.set({
+adminServer.start().then(async () => {
+    const config = await karma.config.parseConfig(undefined, {
         frameworks: ['mocha', 'chai'],
         files: [
             'test/**/*.spec.ts'
@@ -37,7 +45,7 @@ module.exports = function(config: any) {
         ],
         reporters: ['spec'],
         port: 9876,
-        logLevel: config.LOG_INFO,
+        logLevel: karma.constants.LOG_INFO,
 
         browsers: HEADFUL
             ? ['Chrome']
@@ -45,5 +53,14 @@ module.exports = function(config: any) {
 
         autoWatch: CONTINUOUS,
         singleRun: !CONTINUOUS
+    } as karma.ConfigOptions, { throwErrors: true });
+
+    const karmaServer = new karma.Server(config, async () => {
+        await adminServer.stop();
     });
-};
+
+    await karmaServer.start();
+}).catch(e => {
+    console.error(e);
+    process.exit(1);
+});

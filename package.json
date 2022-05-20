@@ -12,9 +12,9 @@
     "pretest": "npm run build",
     "test": "npm run test:node && npm run test:browser",
     "test:node": "mocha -r ts-node/register 'test/**/*.spec.ts'",
-    "test:browser": "karma start",
-    "test:browser:dev": "CONTINUOUS_TEST=true npm run test",
-    "test:browser:debug": "HEADFUL_TEST=true CONTINUOUS_TEST=true npm run test"
+    "test:browser": "ts-node test/run-karma.ts",
+    "test:browser:dev": "CONTINUOUS_TEST=true npm run test:browser",
+    "test:browser:debug": "HEADFUL_TEST=true CONTINUOUS_TEST=true npm run test:browser"
   },
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@types/chai": "^4.2.22",
+    "@types/karma": "^6.3.3",
     "@types/lodash": "^4.14.177",
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
