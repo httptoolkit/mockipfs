@@ -32,7 +32,7 @@ describe("IPFS pin mocking", () => {
         });
 
         it("should allow timing out for a CID to simulate pinning missing content", async () => {
-            await mockNode.forPinAdd(EXAMPLE_CID).thenTimeoutAsUnavailable();
+            await mockNode.forPinAdd(EXAMPLE_CID).thenTimeout();
 
             const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             const result = ipfsClient.pin.add(EXAMPLE_CID);
@@ -44,7 +44,7 @@ describe("IPFS pin mocking", () => {
         });
 
         it("should allow timing out for all CIDs to simulate pinning missing content", async () => {
-            await mockNode.forPinAdd().thenTimeoutAsUnavailable();
+            await mockNode.forPinAdd().thenTimeout();
 
             const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             const result = ipfsClient.pin.add(EXAMPLE_CID);
@@ -57,7 +57,7 @@ describe("IPFS pin mocking", () => {
 
         it("should allow making only some specific pins successful", async () => {
             await mockNode.forPinAdd(EXAMPLE_CID).thenPinSuccessfully();
-            await mockNode.forPinAdd().thenTimeoutAsUnavailable();
+            await mockNode.forPinAdd().thenTimeout();
 
             const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             const timeoutResult = ipfsClient.pin.add(ALTERNATE_CID);

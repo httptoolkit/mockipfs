@@ -39,7 +39,7 @@ export class PinAddRuleBuilder {
         });
     }
 
-    thenTimeoutAsUnavailable() {
+    thenTimeout() {
         return this.addRuleCallback({
             matchers: this.matchers,
             handler: new Mockttp.requestHandlerDefinitions.TimeoutHandlerDefinition()
