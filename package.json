@@ -7,8 +7,11 @@
   "directories": {
     "test": "test"
   },
+  "bin": {
+    "mockipfs": "./dist/admin-bin.js"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x ./dist/admin-bin.js",
     "pretest": "npm run build",
     "test": "npm run test:node && npm run test:browser",
     "test:node": "mocha -r ts-node/register 'test/**/*.spec.ts'",
