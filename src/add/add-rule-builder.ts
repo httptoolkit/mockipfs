@@ -44,11 +44,6 @@ export class AddRuleBuilder {
 
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
-    withContent(cid: string) {
-        this.matchers.push(new Mockttp.matchers.QueryMatcher({ arg: cid }));
-        return this;
-    }
-
     thenAcceptPublish() {
         return this.addRuleCallback({
             matchers: this.matchers,
