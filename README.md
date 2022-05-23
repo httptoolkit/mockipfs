@@ -110,6 +110,8 @@ To do this, you just need to run the admin server before you start your tests. Y
   );
   ```
 
+Note that as this is a universal library (it works in Node.js & browsers) this code does reference some Node.js modules & globals in a couple of places. If you're using MockIPFS from inside a browser, this needs to be handled by your bundler. In many bundlers this will be handled automatically, but if it's not you may need to enable node polyfills for this. In Webpack that usually means enabling [node-polyfill-webpack-plugin](https://www.npmjs.com/package/node-polyfill-webpack-plugin), or in ESBuild you'll want the [`@esbuild-plugins/node-modules-polyfill`](https://www.npmjs.com/package/@esbuild-plugins/node-modules-polyfill) and [`@esbuild-plugins/node-globals-polyfill`](https://www.npmjs.com/package/@esbuild-plugins/node-globals-polyfill) plugins.
+
 ### Mocking IPFS interactions
 
 MockIPFS provides an API that defines rules for interactions with the IPFS node. For example, you can:
