@@ -52,4 +52,18 @@ describe("IPFS cat mocking", () => {
         ])).to.equal('timeout');
     });
 
+    it("should record cat queries", async () => {
+        await mockNode.forCat().thenReturn('mock-response');
+
+        const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+
+        await itValue(ipfsClient.cat('an-IPFS-id')).catch(() => {});
+        await itValue(ipfsClient.cat('another-id')).catch(() => {});
+
+        expect(await mockNode.getQueriedContent()).to.deep.equal([
+            { path: 'an-IPFS-id' },
+            { path: 'another-id' }
+        ]);
+    });
+
 });

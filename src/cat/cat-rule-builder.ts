@@ -4,8 +4,8 @@
  */
 
 import { RequestRuleBuilder } from "mockttp";
-import { MockedIPFSEndpoint } from "./mocked-endpoint";
-import { buildIpfsStreamDefaultHeaders } from "./utils/http";
+import { MockedIPFSEndpoint } from "../mocked-endpoint";
+import { buildIpfsStreamDefaultHeaders } from "../utils/http";
 
 export class CatRuleBuilder {
     constructor(

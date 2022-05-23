@@ -5,7 +5,10 @@
 
 import * as Mockttp from "mockttp";
 
-import { CatRuleBuilder } from "./cat-rule-builder";
+import { CatMock } from "./cat/cat-mock";
+import { CatRuleBuilder } from "./cat/cat-rule-builder";
+import { AddMock } from "./add/add-mock";
+import { AddRuleBuilder } from "./add/add-rule-builder";
 
 import { IPNSMock } from "./ipns/ipns-mock";
 import { NamePublishRuleBuilder } from "./ipns/name-publish-rule-builder";
@@ -15,8 +18,6 @@ import { PinningMock } from "./pinning/pinning-mock";
 import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
 import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
 import { PinLsRuleBuilder } from "./pinning/pin-ls-rule-builder";
-import { AddMock } from "./add/add-mock";
-import { AddRuleBuilder } from "./add/add-rule-builder";
 
 export interface MockIPFSOptions {
     unmatchedRequests?:
@@ -29,6 +30,7 @@ export class MockIPFSNode {
     private ipnsMock: IPNSMock;
     private pinningMock: PinningMock;
     private addMock: AddMock;
+    private catMock: CatMock;
 
     private seenRequests: Mockttp.CompletedRequest[] = []
 
@@ -40,6 +42,7 @@ export class MockIPFSNode {
         this.ipnsMock = new IPNSMock(this.mockttpServer)
         this.pinningMock = new PinningMock(this.mockttpServer);
         this.addMock = new AddMock(this.mockttpServer);
+        this.catMock = new CatMock(this.mockttpServer);
     }
 
     async start() {
@@ -73,11 +76,7 @@ export class MockIPFSNode {
                 this.ipnsMock.addMockttpFallbackRules(),
                 this.pinningMock.addMockttpFallbackRules(),
                 this.addMock.addMockttpFallbackRules(),
-
-                // The real default IPFS cat behaviour seems to be just timing out:
-                this.mockttpServer.forPost('/api/v0/cat')
-                    .asPriority(Mockttp.RulePriority.FALLBACK)
-                    .thenTimeout()
+                this.catMock.addMockttpFallbackRules()
             ]
             : [
                 this.mockttpServer.forUnmatchedRequest()
@@ -149,6 +148,10 @@ export class MockIPFSNode {
         return new PinLsRuleBuilder(
             this.pinningMock.addPinLsRule
         );
+    }
+
+    async getQueriedContent(): Promise<Array<{ path: string }>> {
+        return this.catMock.getQueriedContent(this.seenRequests);
     }
 
     async getAddedContent(): Promise<Array<{ path?: string, content?: Uint8Array }>> {

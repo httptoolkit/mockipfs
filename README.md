@@ -49,7 +49,7 @@ describe("MockIPFS", () => {
         const ipfsPath = "/ipfs/a-fake-IPFS-id";
 
         // Mock some node endpoints:
-        const catMock = await mockNode.forCat(ipfsPath).thenReturn("Mock content");
+        await mockNode.forCat(ipfsPath).thenReturn("Mock content");
 
         // Lookup some content with a real IPFS client:
         const ipfsClient = IPFS.create(mockNode.ipfsOptions);
@@ -59,10 +59,11 @@ describe("MockIPFS", () => {
         const contentText = uint8ToString(uint8ArrayConcat(content));
         expect(contentText).to.equal("Mock content");
 
-        // Assert that our mock was called as expected:
-        const catRequests = await catMock.getSeenRequests();
-        expect(catRequests.length).to.equal(1);
-        expect(catRequests[0].params.arg).to.equal(ipfsPath);
+        // Assert that we saw the requests we expected
+        const catRequests = await mockNode.getQueriedContent();
+        expect(catRequests).to.deep.equal([
+            { path: ipfsPath }
+        ]);
     });
 });
 ```
