@@ -4,6 +4,14 @@
 
 MockIPFS lets you build a fake IPFS node, or proxy traffic to a real IPFS node, and inspect & mock the interactions made by your IPFS API client (e.g. [ipfs-http-client](https://www.npmjs.com/package/ipfs-http-client)).
 
+---
+
+:warning: _MockIPFS is still new & rapidly developing!_ :warning:
+
+_Everything described here works today, but there's lots more to come, and some advanced use cases may run into rough edges. If you hit any problems or missing features, please [open an issue](https://github.com/httptoolkit/mockipfs/issues/new)._
+
+---
+
 ## Features
 
 More specifically, MockIPFS lets you:
