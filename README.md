@@ -214,3 +214,9 @@ This only changes the unmatched request behaviour, and all other methods will co
 * Add support for interactive IPFS debugging & mocking in [HTTP Toolkit](https://httptoolkit.tech) by building on top of this library.
 * Extend IPFS to mock LibP2P traffic in Node & browser JS, with a `mockIPFS(realIPFSNode)` API to inject config into an node to redirect all traffic via MockIPFS (or by mocking web crypto?).
 * Much much more! [Feature suggestions very welcome](https://github.com/httptoolkit/mockipfs/issues/new).
+
+---
+
+_This‌ ‌project‌ ‌has‌ ‌received‌ ‌funding‌ ‌from‌ ‌the‌ ‌European‌ ‌Union’s‌ ‌Horizon‌ ‌2020‌‌ research‌ ‌and‌ ‌innovation‌ ‌programme‌ ‌within‌ ‌the‌ ‌framework‌ ‌of‌ ‌the‌ ‌NGI-POINTER‌‌ Project‌ ‌funded‌ ‌under‌ ‌grant‌ ‌agreement‌ ‌No‌ 871528._
+
+![The NGI logo and EU flag](./ngi-eu-footer.png)
