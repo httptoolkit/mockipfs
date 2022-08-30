@@ -57,6 +57,7 @@ export class MockIPFSNode {
 
     reset() {
         this.seenRequests = [];
+        this.mockttpServer.reset();
     }
 
     get ipfsOptions() {
