@@ -7,7 +7,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x, 18.x]
+        node-version: [16.x, v16.16.0, 18.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -18,3 +18,11 @@ jobs:
 
       - run: npm install --no-package-lock
       - run: npm test
+
+      - name: Deploy docs
+        if: github.ref == 'refs/heads/main' && matrix.node-version == 'v16.16.0'
+        uses: JamesIves/github-pages-deploy-action@v4.2.2
+        with:
+          single-commit: true
+          branch: gh-pages
+          folder: typedoc

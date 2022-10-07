@@ -11,7 +11,7 @@ import {
 } from "../utils/http";
 import { mockAddResultPart } from "./add-mock";
 
-type ContentDefinition =
+export type ContentDefinition =
     | string
     | Uint8Array
     | { path?: string, content?: string | Uint8Array };

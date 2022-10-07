@@ -11,7 +11,9 @@
     "mockipfs": "./dist/admin-bin.js"
   },
   "scripts": {
-    "build": "tsc && chmod +x ./dist/admin-bin.js",
+    "build": "npm run build:src && npm run build:doc",
+    "build:src": "tsc && chmod +x ./dist/admin-bin.js",
+    "build:doc": "typedoc src/main.ts",
     "pretest": "npm run build",
     "test": "npm run test:node && npm run test:browser",
     "test:node": "mocha -r ts-node/register 'test/**/*.spec.ts'",
@@ -67,6 +69,7 @@
     "mockttp": "^3.1.0",
     "node-abort-controller": "^3.0.1",
     "ts-node": "^10.4.0",
+    "typedoc": "^0.23.11",
     "typescript": "4.6.4",
     "uint8arrays": "^3.0.0"
   },

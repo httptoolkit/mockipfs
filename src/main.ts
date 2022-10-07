@@ -27,3 +27,14 @@ export type {
     MockIPFSNode,
     MockIPFSOptions
 };
+
+// Export various internal types:
+export type { AddRuleBuilder, ContentDefinition } from './add/add-rule-builder';
+export type { CatRuleBuilder } from './cat/cat-rule-builder';
+export type { NamePublishRuleBuilder } from './ipns/name-publish-rule-builder';
+export type { NameResolveRuleBuilder } from './ipns/name-resolve-rule-builder';
+export type { PinAddRuleBuilder } from './pinning/pin-add-rule-builder';
+export type { PinLsRuleBuilder } from './pinning/pin-ls-rule-builder';
+export type { PinRmRuleBuilder } from './pinning/pin-rm-rule-builder';
+
+export type { MockedIPFSEndpoint } from './mocked-endpoint';
