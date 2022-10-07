@@ -208,6 +208,10 @@ mockNode.start();
 
 This only changes the unmatched request behaviour, and all other methods will continue to define behaviour and query seen request data as normal.
 
+## API Reference Docs
+
+For more details, see the [MockIPFS reference docs](https://httptoolkit.github.io/mockipfs/).
+
 ## Future Plans
 
 * Expand to cover more of the IPFS API (is there something specific you'd find useful? [File an issue!](https://github.com/httptoolkit/mockipfs/issues/new))
