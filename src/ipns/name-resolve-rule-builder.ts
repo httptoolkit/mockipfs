@@ -6,8 +6,14 @@
 import * as Mockttp from "mockttp";
 import {  IpfsFixedResponseHandlerDefinition } from "../utils/http";
 
+/**
+ * A builder to allow defining rules that will mock IPNS name resolution requests.
+ */
 export class NameResolveRuleBuilder {
 
+    /**
+     * This builder should not be constructed directly. Call `mockNode.forNameResolve(name)` instead.
+     */
     constructor(
         private name: string | undefined,
         private addRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
@@ -21,6 +27,11 @@ export class NameResolveRuleBuilder {
 
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
+    /**
+     * Return a successful name resolution result, resolving to the given IPFS path.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenResolveTo(path: string) {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -30,6 +41,11 @@ export class NameResolveRuleBuilder {
         });
     }
 
+    /**
+     * Return a failing name resolution result, rejecting the request as if the name was not found.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenFailToResolve() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -41,6 +57,11 @@ export class NameResolveRuleBuilder {
         });
     }
 
+    /**
+     * Timeout, accepting the request but never returning a response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenTimeout() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -48,6 +69,11 @@ export class NameResolveRuleBuilder {
         });
     }
 
+    /**
+     * Close the connection immediately after receiving the matching request, without sending any response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenCloseConnection() {
         return this.addRuleCallback({
             matchers: this.matchers,

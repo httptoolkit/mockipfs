@@ -16,10 +16,17 @@ type ContentDefinition =
     | Uint8Array
     | { path?: string, content?: string | Uint8Array };
 
+/**
+ * A builder to allow defining rules that will mock IPFS add requests.
+ */
 export class AddRuleBuilder {
 
+    /**
+     * This builder should not be constructed directly. Call `mockNode.forAdd()` or
+     * `mockNode.forAddIncluding(content)` instead.
+     */
     constructor(
-        private contentMatchers: Array<ContentDefinition> | undefined,
+        contentMatchers: Array<ContentDefinition> | undefined,
         private addRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
     ) {
         if (contentMatchers?.length) {
@@ -44,6 +51,11 @@ export class AddRuleBuilder {
 
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
+    /**
+     * Return a successful result, as if the content was published to IPFS, and returning mock CID values.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenAcceptPublish() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -57,6 +69,12 @@ export class AddRuleBuilder {
         });
     }
 
+    /**
+     * Return a successful result, as if the content was published to IPFS, and returning a given fixed mock CID
+     * value, array of values, or full array of `{ Name, Hash, Size }` results.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenAcceptPublishAs(result: string | Array<string | { Name: string, Hash: string, Size?: number }>) {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -85,6 +103,11 @@ export class AddRuleBuilder {
         });
     }
 
+    /**
+     * Timeout, accepting the request but never returning a response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenTimeout() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -92,6 +115,11 @@ export class AddRuleBuilder {
         });
     }
 
+    /**
+     * Close the connection immediately after receiving the matching request, without sending any response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenCloseConnection() {
         return this.addRuleCallback({
             matchers: this.matchers,

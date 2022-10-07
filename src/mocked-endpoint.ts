@@ -12,6 +12,9 @@ export class MockedIPFSEndpoint {
 
     isPending = () => this.mockedHttpEndpoint.isPending();
 
+    /**
+     * Return an array of the requests seen by this endpoint.
+     */
     async getSeenRequests() {
         const requests = await this.mockedHttpEndpoint.getSeenRequests();
 

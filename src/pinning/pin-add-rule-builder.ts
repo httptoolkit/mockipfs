@@ -9,8 +9,14 @@ import {
     IpfsFixedResponseHandlerDefinition
 } from "../utils/http";
 
+/**
+ * A builder to allow defining rules that will mock IPFS pin add requests.
+ */
 export class PinAddRuleBuilder {
 
+    /**
+     * This builder should not be constructed directly. Call `mockNode.forPinAdd(cid)` instead.
+     */
     constructor(
         private cid: string | undefined,
         private addRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
@@ -24,6 +30,11 @@ export class PinAddRuleBuilder {
 
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
+    /**
+     * Return a successful result, as if the IPFS content was pinned successfully.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenPinSuccessfully() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -39,6 +50,11 @@ export class PinAddRuleBuilder {
         });
     }
 
+    /**
+     * Timeout, accepting the request but never returning a response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenTimeout() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -46,6 +62,11 @@ export class PinAddRuleBuilder {
         });
     }
 
+    /**
+     * Close the connection immediately after receiving the matching request, without sending any response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenCloseConnection() {
         return this.addRuleCallback({
             matchers: this.matchers,

@@ -6,10 +6,16 @@
 import * as Mockttp from "mockttp";
 import { buildIpfsFixedValueResponse } from "../utils/http";
 
+/**
+ * A builder to allow defining rules that will mock IPNS name publication requests.
+ */
 export class NamePublishRuleBuilder {
 
+    /**
+     * This builder should not be constructed directly. Call `mockNode.forNamePublish(name)` instead.
+     */
     constructor(
-        private nameKey: string | undefined,
+        nameKey: string | undefined,
         private addRuleCallback: (data: Mockttp.RequestRuleData) => Promise<void>
     ) {
         if (nameKey === 'self') {
@@ -27,11 +33,19 @@ export class NamePublishRuleBuilder {
 
     private matchers: Mockttp.matchers.RequestMatcher[] = [];
 
+    /**
+     * Limit the rule so that it matches only publications of a specific IPFS path.
+     */
     withContent(cid: string) {
         this.matchers.push(new Mockttp.matchers.QueryMatcher({ arg: cid }));
         return this;
     }
 
+    /**
+     * Return a successful result, as if the IPNS name was published, returning a default mock IPNS result.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenAcceptPublish() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -49,6 +63,11 @@ export class NamePublishRuleBuilder {
         });
     }
 
+    /**
+     * Return a successful result, as if the IPNS name was published, returning a given IPNS name.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenAcceptPublishAs(name: string) {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -65,6 +84,11 @@ export class NamePublishRuleBuilder {
         });
     }
 
+    /**
+     * Timeout, accepting the request but never returning a response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenTimeout() {
         return this.addRuleCallback({
             matchers: this.matchers,
@@ -72,6 +96,11 @@ export class NamePublishRuleBuilder {
         });
     }
 
+    /**
+     * Close the connection immediately after receiving the matching request, without sending any response.
+     *
+     * This method completes the rule definition, and returns a promise that resolves once the rule is active.
+     */
     thenCloseConnection() {
         return this.addRuleCallback({
             matchers: this.matchers,
