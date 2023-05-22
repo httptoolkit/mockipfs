@@ -4,6 +4,7 @@
  */
 
 import { AbortController } from "node-abort-controller";
+// @ts-ignore
 globalThis.AbortController ??= AbortController;
 
 import { expect } from "chai";
