@@ -18,6 +18,7 @@ import { PinningMock } from "./pinning/pinning-mock";
 import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
 import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
 import { PinLsRuleBuilder } from "./pinning/pin-ls-rule-builder";
+import { PinRemoteLsRuleBuilder } from "./pinning/pin-remote-ls-rule-builder";
 
 export interface MockIPFSOptions {
     /**
@@ -227,6 +228,15 @@ export class MockIPFSNode {
     forPinLs() {
         return new PinLsRuleBuilder(
             this.pinningMock.addPinLsRule
+        );
+    }
+
+    /**
+     * Mock the behaviour of IPFS remote pinning service listing.
+     */
+    forPinRemoteLs() {
+        return new PinRemoteLsRuleBuilder(
+            this.pinningMock.addPinRemoteLsRule
         );
     }
 

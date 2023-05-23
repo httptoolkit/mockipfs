@@ -11,6 +11,9 @@ import {
     delay,
     EXAMPLE_CID,
     ALTERNATE_CID,
+    EXAMPLE_SERVICE,
+    EXAMPLE_ALT_SERVICE,
+    normalizeService,
     itAll
 } from '../test-setup';
 
@@ -211,6 +214,128 @@ describe("IPFS pin mocking", () => {
             ]);
         });
 
+    });
+
+    describe("for remote ls", () => {
+
+        it("should return an empty list when listing remote services by default", async () => {
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+            const res = await ipfsClient.pin.remote.service.ls();
+
+            const result = await itAll(res);
+
+            expect(result).to.deep.equal([]);
+        });
+
+        it("should allow mocking the list of remote services", async () => {
+            await mockNode.forPinRemoteLs().thenReturn([
+                EXAMPLE_SERVICE,
+                EXAMPLE_ALT_SERVICE
+            ]);
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+
+            const result = await itAll(await ipfsClient.pin.remote.service.ls());
+
+            expect(
+                result.map(normalizeService)
+            ).to.deep.equal([
+                EXAMPLE_SERVICE,
+                EXAMPLE_ALT_SERVICE
+            ].map(normalizeService));
+        });
+
+        it("should support including stat for remote services", async () => {
+            const validStat = {
+                stat: {
+                    status: 'valid',
+                    pinCount: {
+                        queued: 1,
+                        pinning: 1,
+                        pinned: 1,
+                        failed: 1
+                    }
+                }
+            };
+            const invalidStat = {
+                stat: {
+                    status: 'invalid'
+                }
+            };
+
+            await mockNode.forPinRemoteLs().thenReturn([
+                {
+                    ...EXAMPLE_SERVICE,
+                    ...validStat
+                },
+                {
+                    ...EXAMPLE_ALT_SERVICE,
+                    ...invalidStat
+                }
+            ]);
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+
+            const result = await itAll(await ipfsClient.pin.remote.service.ls({ stat: true }));
+
+            expect(
+                result.map(normalizeService)
+            ).to.deep.equal([
+                {
+                    ...EXAMPLE_SERVICE,
+                    ...validStat
+                },
+                {
+                    ...EXAMPLE_ALT_SERVICE,
+                    ...invalidStat
+                }
+            ].map(normalizeService));
+        });
+
+        it("should return default stat for remote services", async () => {
+            await mockNode.forPinRemoteLs().thenReturn([
+                EXAMPLE_SERVICE
+            ]);
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+
+            const result = await itAll(await ipfsClient.pin.remote.service.ls({ stat: true }));
+
+            expect(
+                result.map(normalizeService)
+            ).to.deep.equal([
+                {
+                    ...EXAMPLE_SERVICE,
+                    stat: {
+                        status: 'invalid'
+                    }
+                }
+            ].map(normalizeService));
+        });
+
+        it("can timeout remote service resolution", async () => {
+            await mockNode.forPinRemoteLs().thenTimeout();
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+
+            const result = ipfsClient.pin.remote.service.ls();
+
+            expect(await Promise.race([
+                result,
+                delay(500).then(() => 'timeout')
+            ])).to.equal('timeout');
+        });
+
+        it("can close remote service request connection", async () => {
+            await mockNode.forPinRemoteLs().thenCloseConnection();
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+
+            const result = await ipfsClient.pin.remote.service.ls().catch(e => e);
+
+            expect(result).to.be.instanceOf(TypeError);
+            expect(result.cause).to.match(/other side closed/i);
+        });
     });
 
 });
