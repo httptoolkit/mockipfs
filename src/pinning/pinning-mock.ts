@@ -48,6 +48,15 @@ export class PinningMock {
                 ],
                 completionChecker: new Mockttp.completionCheckers.Always(),
                 handler: new IpfsStreamHandlerDefinition(200)
+            }),
+            this.mockttpServer.addRequestRules({
+                priority: Mockttp.RulePriority.FALLBACK,
+                matchers: [
+                    new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                    new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/remote/service/ls')
+                ],
+                completionChecker: new Mockttp.completionCheckers.Always(),
+                handler: new Mockttp.requestHandlers.CallbackHandler(this.defaultRemoteLsHandler)
             })
         ]);
     }
@@ -58,6 +67,10 @@ export class PinningMock {
         const value = parsedURL.searchParams.get('arg')!;
 
         return buildIpfsFixedValueResponse(200, { Pins: [value] });
+    };
+
+    defaultRemoteLsHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
+        return buildIpfsFixedValueResponse(200, { RemoteServices: [] });
     };
 
     addPinAddRule = async (ruleData: Mockttp.RequestRuleData) => {
@@ -89,6 +102,17 @@ export class PinningMock {
                 ...ruleData.matchers,
                 new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
                 new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/ls')
+            ]
+        });
+    };
+
+    addPinRemoteLsRule = async (ruleData: Mockttp.RequestRuleData) => {
+        await this.mockttpServer.addRequestRules({
+            ...ruleData,
+            matchers: [
+                ...ruleData.matchers,
+                new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/remote/service/ls')
             ]
         });
     };

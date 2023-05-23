@@ -4,12 +4,17 @@
  */
 
 import { AbortController } from "node-abort-controller";
+// @ts-ignore
 globalThis.AbortController ??= AbortController;
 
 import { expect } from "chai";
 
 import type * as IPFS from "ipfs";
 import * as IpfsClient from "ipfs-http-client";
+import {
+    RemotePinService,
+    RemotePinServiceWithStat
+} from "ipfs-core-types/src/pin/remote/service";
 
 import itAll = require('it-all');
 import {
@@ -32,6 +37,13 @@ export {
 
 export const EXAMPLE_CID = 'QmY7Yh4UquoXHLPFo2XbhXkhBvFoPwmQUSa92pxnxjQuPU';
 export const ALTERNATE_CID = 'QmY7Yh4UquoXHLPFo2XbhXkhBvFoPwmQUSa92pxnxjQABC';
+export const EXAMPLE_SERVICE = { service: 'foo', endpoint: new URL('http://localhost:9876/') };
+export const EXAMPLE_ALT_SERVICE = { service: 'bar', endpoint: new URL('http://localhost:6789/') };
+
+export const normalizeService = function (service: RemotePinServiceWithStat | RemotePinService) {
+    const _service = { ...service, endpoint: service.endpoint.toString() };
+    return _service;
+};
 
 export const itValue = async <T>(asyncIterable: AsyncIterable<T>|Iterable<T>): Promise<T> => {
     const values = await itAll(asyncIterable);

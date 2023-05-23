@@ -226,6 +226,10 @@ The full list of methods available is:
   * `thenReturn(values: Array<{ type, cid }>)` - Return a given list of pins.
   * `thenTimeout()` - Wait forever, returning no response
   * `thenCloseConnection()` - Kills the TCP connection, causing a network error
+* `forPinRemoteLs()` - Mock listing registered remote pinning services
+  * `thenReturn(values: Array<{ service: string, endpoint: URL, stat?: Stat }>)` - Return a given list of remote services.
+  * `thenTimeout()` - Wait forever, returning no response
+  * `thenCloseConnection()` - Kills the TCP connection, causing a network error
 
 ### Examining IPFS requests
 
