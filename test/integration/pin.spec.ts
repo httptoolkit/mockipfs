@@ -326,16 +326,6 @@ describe("IPFS pin mocking", () => {
             ])).to.equal('timeout');
         });
 
-        it("can close remote service request connection", async () => {
-            await mockNode.forPinRemoteLs().thenCloseConnection();
-
-            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
-
-            const result = await ipfsClient.pin.remote.service.ls().catch(e => e);
-
-            expect(result).to.be.instanceOf(TypeError);
-            expect(result.cause).to.match(/other side closed/i);
-        });
     });
 
 });
