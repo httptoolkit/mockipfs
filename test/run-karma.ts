@@ -74,6 +74,9 @@ Promise.all([
     });
 
     await karmaServer.start();
+    karmaServer.on('run_complete', (_browsers, results) => {
+        process.exit(results.exitCode);
+    });
 }).catch(e => {
     console.error(e);
     process.exit(1);
