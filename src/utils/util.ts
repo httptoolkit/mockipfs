@@ -20,3 +20,6 @@ export function byteLength(input: string | Uint8Array | Buffer) {
         return input.length;
     }
 }
+
+export const delay = (durationMs: number) =>
+    new Promise((resolve) => setTimeout(resolve, durationMs));

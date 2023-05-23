@@ -5,6 +5,8 @@
 
 import * as Mockttp from "mockttp";
 
+import { delay, isNode } from "./utils/util";
+
 import { CatMock } from "./cat/cat-mock";
 import { CatRuleBuilder } from "./cat/cat-rule-builder";
 import { AddMock } from "./add/add-mock";
@@ -245,6 +247,11 @@ export class MockIPFSNode {
      * from this IPFS mock node since it started.
      */
     async getQueriedContent(): Promise<Array<{ path: string }>> {
+        // In browsers, the ipfs-http-client sometimes completes just a moment left
+        // before the request 'officially' completes. To avoid confusion here, we
+        // wait briefly to ensure all queried content is collected correctly.
+        if (!isNode) await delay(1);
+
         return this.catMock.getQueriedContent(this.seenRequests);
     }
 

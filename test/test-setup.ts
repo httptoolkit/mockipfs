@@ -25,14 +25,15 @@ import {
 export { HTTPError } from "ipfs-utils/src/http";
 
 import * as MockIPFS from '../src/main';
-import { isNode } from "../src/utils/util";
+import { isNode, delay } from "../src/utils/util";
 export {
     expect,
     MockIPFS,
     IpfsClient,
     itAll,
     uint8ArrayConcat,
-    uint8ToString
+    uint8ToString,
+    delay
 };
 
 export const EXAMPLE_CID = 'QmY7Yh4UquoXHLPFo2XbhXkhBvFoPwmQUSa92pxnxjQuPU';
@@ -56,9 +57,6 @@ export const itValue = async <T>(asyncIterable: AsyncIterable<T>|Iterable<T>): P
 
     return values[0];
 };
-
-export const delay = (durationMs: number) =>
-    new Promise((resolve) => setTimeout(resolve, durationMs));
 
 export type RealIpfsClient = IPFS.IPFS | IpfsClient.IPFSHTTPClient;
 export let realIpfsNodePromise: Promise<RealIpfsClient>;
