@@ -52,14 +52,15 @@ export class PinRemoteAddRuleBuilder {
         });
     }
 
-    thenFailWith(err: Error | string) {
+    thenFailAsDuplicate(message?: string) {
         return this.addRuleCallback({
             matchers: this.matchers,
             handler: new Mockttp.requestHandlerDefinitions.CallbackHandlerDefinition((req) => {
-                if (err instanceof Error) {
-                    throw err;
-                }
-                throw new Error(err);
+                return buildIpfsFixedValueResponse(500, {
+                    "Message": message || "reason: \"DUPLICATE_OBJECT\"",
+                    "Code": 0,
+                    "Type": "error"
+                });
             })
         });
     }

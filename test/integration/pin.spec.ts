@@ -137,8 +137,8 @@ describe("IPFS pin mocking", () => {
             ])).to.equal('timeout');
         });
 
-        it("should allow mocking an error when adding remote pin", async () => {
-            await mockNode.forPinRemoteAdd().thenFailWith("mock error");
+        it("should allow mocking duplicate pin error", async () => {
+            await mockNode.forPinRemoteAdd().thenFailAsDuplicate("mock error");
 
             const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
             const exampleCid = CID.parse(EXAMPLE_CID);
@@ -147,8 +147,8 @@ describe("IPFS pin mocking", () => {
               name: 'fooz-baz'
             }).catch(e => e);
 
-            expect(result).to.be.instanceOf(Error);
-            expect(result.message).to.equal("Error: mock error");
+            expect(result).to.be.instanceOf(HTTPError);
+            expect(result.message).to.equal("mock error");
         });
 
         it("should allow making only some specific pins successful", async () => {

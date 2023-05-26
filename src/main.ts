@@ -30,8 +30,7 @@ export type {
 
 // Export various internal types:
 export type { AddRuleBuilder, ContentDefinition } from './add/add-rule-builder';
-export type { CatRuleBuilder } from './cat/cat-rule-builder';
-export type { GetRuleBuilder } from './get/get-rule-builder';
+export type { ContentRetrievalRuleBuilder } from './content-retrieval-rule-builder';
 export type { NamePublishRuleBuilder } from './ipns/name-publish-rule-builder';
 export type { NameResolveRuleBuilder } from './ipns/name-resolve-rule-builder';
 export type { PinAddRuleBuilder } from './pinning/pin-add-rule-builder';

@@ -7,9 +7,8 @@ import * as Mockttp from "mockttp";
 
 import { delay, isNode } from "./utils/util";
 import { GetMock } from "./get/get-mock";
-import { GetRuleBuilder } from "./get/get-rule-builder";
 import { CatMock } from "./cat/cat-mock";
-import { CatRuleBuilder } from "./cat/cat-rule-builder";
+import { ContentRetrievalRuleBuilder } from "./content-retrieval-rule-builder";
 import { AddMock } from "./add/add-mock";
 import { AddRuleBuilder } from "./add/add-rule-builder";
 
@@ -149,7 +148,7 @@ export class MockIPFSNode {
             catRuleBuilder = catRuleBuilder.withQuery({ arg: cid });
         }
 
-        return new CatRuleBuilder(catRuleBuilder);
+        return new ContentRetrievalRuleBuilder(catRuleBuilder);
     }
 
     /**
@@ -175,7 +174,7 @@ export class MockIPFSNode {
             getRuleBuilder = getRuleBuilder.withQuery({ arg: cid });
         }
 
-        return new GetRuleBuilder(getRuleBuilder);
+        return new ContentRetrievalRuleBuilder(getRuleBuilder);
     }
 
     /**

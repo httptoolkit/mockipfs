@@ -4,13 +4,13 @@
  */
 
 import { RequestRuleBuilder } from "mockttp";
-import { MockedIPFSEndpoint } from "../mocked-endpoint";
-import { buildIpfsStreamDefaultHeaders } from "../utils/http";
+import { MockedIPFSEndpoint } from "./mocked-endpoint";
+import { buildIpfsStreamDefaultHeaders } from "./utils/http";
 
 /**
  * A builder to allow defining rules that will mock IPFS get requests.
  */
-export class GetRuleBuilder { // TODO: this is identical to the cat rule builder, maybe we could generalize?
+export class ContentRetrievalRuleBuilder {
 
     /**
      * This builder should not be constructed directly. Call `mockNode.forGet(cid)` instead.
