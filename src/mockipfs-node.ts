@@ -19,6 +19,7 @@ import { NameResolveRuleBuilder } from "./ipns/name-resolve-rule-builder";
 
 import { PinningMock } from "./pinning/pinning-mock";
 import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
+import { PinRemoteAddRuleBuilder } from "./pinning/pin-remote-add-rule-builder";
 import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
 import { PinLsRuleBuilder } from "./pinning/pin-ls-rule-builder";
 import { PinRemoteLsRuleBuilder } from "./pinning/pin-remote-ls-rule-builder";
@@ -229,6 +230,19 @@ export class MockIPFSNode {
         return new PinAddRuleBuilder(
             cid,
             this.pinningMock.addPinAddRule
+        );
+    }
+
+    /**
+     * Mock the behaviour of IPFS pinning to a remote service
+     *
+     * This takes an optional CID argument. If not provided, the mock
+     * will match remote pinning of any CID.
+     */
+    forPinRemoteAdd(cid?: string) {
+        return new PinRemoteAddRuleBuilder(
+            cid,
+            this.pinningMock.addPinRemoteAddRule
         );
     }
 
