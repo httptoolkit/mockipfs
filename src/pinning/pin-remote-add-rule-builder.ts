@@ -52,6 +52,18 @@ export class PinRemoteAddRuleBuilder {
         });
     }
 
+    thenFailWith(err: Error | string) {
+        return this.addRuleCallback({
+            matchers: this.matchers,
+            handler: new Mockttp.requestHandlerDefinitions.CallbackHandlerDefinition((req) => {
+                if (err instanceof Error) {
+                    throw err;
+                }
+                throw new Error(err);
+            })
+        });
+    }
+
     /**
      * Timeout, accepting the request but never returning a response.
      *

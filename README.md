@@ -223,6 +223,7 @@ The full list of methods available is:
   * `thenCloseConnection()` - Kills the TCP connection, causing a network error
 * `forPinRemoteAdd(cid?: string)` - Mock remote pin addition for a given CID (or all CIDs, if no CID is provided)
   * `thenPinSuccessfully()` - Returns a successful result for the pinned content
+  * `thenFailWith(err: Error | string)` - fail with the provided Error instance, or an Error with the provided message
   * `thenTimeout()` - Wait forever, returning no response
   * `thenCloseConnection()` - Kills the TCP connection, causing a network error
 * `forPinRm(cid?: string)` - Mock pin removal for a given CID (or all CIDs, if no CID is provided)
