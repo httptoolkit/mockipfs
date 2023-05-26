@@ -33,8 +33,8 @@ describe("Proxying to a real IPFS node", function () {
 
     });
 
-    beforeEach(() => mockNode.start());
-    afterEach(() => mockNode.stop());
+    beforeEach(async () => await mockNode.start());
+    afterEach(async () => await mockNode.stop());
 
     it("should forward unmatched requests", async () => {
         const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);

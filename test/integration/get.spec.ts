@@ -15,8 +15,8 @@ describe("IPFS get mocking", () => {
 
     const mockNode = MockIPFS.getLocal();
 
-    beforeEach(() => mockNode.start());
-    afterEach(() => mockNode.stop());
+    beforeEach(async () => await mockNode.start());
+    afterEach(async () => await mockNode.stop());
 
     it("should time out for all content by default", async () => {
         const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);

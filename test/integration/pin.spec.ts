@@ -22,8 +22,8 @@ describe("IPFS pin mocking", () => {
 
     const mockNode = MockIPFS.getLocal();
 
-    beforeEach(() => mockNode.start());
-    afterEach(() => mockNode.stop());
+    beforeEach(async () => await mockNode.start());
+    afterEach(async () => await mockNode.stop());
 
     describe("for addition", () => {
 
