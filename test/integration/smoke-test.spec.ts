@@ -16,8 +16,8 @@ const mockNode = MockIPFS.getLocal();
 
 describe("MockIPFS", () => {
     // Start & stop your mock node to reset state between tests
-    beforeEach(() => mockNode.start());
-    afterEach(() => mockNode.stop());
+    beforeEach(async () => await mockNode.start());
+    afterEach(async () => await mockNode.stop());
 
     it("lets you mock behaviour and assert on node interactions", async () => {
         const ipfsPath = "/ipfs/a-fake-IPFS-id";

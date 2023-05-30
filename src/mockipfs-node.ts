@@ -6,9 +6,9 @@
 import * as Mockttp from "mockttp";
 
 import { delay, isNode } from "./utils/util";
-
+import { GetMock } from "./get/get-mock";
 import { CatMock } from "./cat/cat-mock";
-import { CatRuleBuilder } from "./cat/cat-rule-builder";
+import { ContentRetrievalRuleBuilder } from "./content-retrieval-rule-builder";
 import { AddMock } from "./add/add-mock";
 import { AddRuleBuilder } from "./add/add-rule-builder";
 
@@ -18,6 +18,7 @@ import { NameResolveRuleBuilder } from "./ipns/name-resolve-rule-builder";
 
 import { PinningMock } from "./pinning/pinning-mock";
 import { PinAddRuleBuilder } from "./pinning/pin-add-rule-builder";
+import { PinRemoteAddRuleBuilder } from "./pinning/pin-remote-add-rule-builder";
 import { PinRmRuleBuilder } from "./pinning/pin-rm-rule-builder";
 import { PinLsRuleBuilder } from "./pinning/pin-ls-rule-builder";
 import { PinRemoteLsRuleBuilder } from "./pinning/pin-remote-ls-rule-builder";
@@ -59,6 +60,7 @@ export class MockIPFSNode {
     private pinningMock: PinningMock;
     private addMock: AddMock;
     private catMock: CatMock;
+    private getMock: GetMock;
 
     private seenRequests: Mockttp.CompletedRequest[] = []
 
@@ -71,6 +73,7 @@ export class MockIPFSNode {
         this.pinningMock = new PinningMock(this.mockttpServer);
         this.addMock = new AddMock(this.mockttpServer);
         this.catMock = new CatMock(this.mockttpServer);
+        this.getMock = new GetMock(this.mockttpServer);
     }
 
     /**
@@ -115,7 +118,8 @@ export class MockIPFSNode {
                 this.ipnsMock.addMockttpFallbackRules(),
                 this.pinningMock.addMockttpFallbackRules(),
                 this.addMock.addMockttpFallbackRules(),
-                this.catMock.addMockttpFallbackRules()
+                this.catMock.addMockttpFallbackRules(),
+                this.getMock.addMockttpFallbackRules()
             ]
             : [
                 this.mockttpServer.forUnmatchedRequest()
@@ -144,7 +148,7 @@ export class MockIPFSNode {
             catRuleBuilder = catRuleBuilder.withQuery({ arg: cid });
         }
 
-        return new CatRuleBuilder(catRuleBuilder);
+        return new ContentRetrievalRuleBuilder(catRuleBuilder);
     }
 
     /**
@@ -154,6 +158,23 @@ export class MockIPFSNode {
      */
     forAdd() {
         return this.forAddIncluding();
+    }
+
+    /**
+     * Mock IPFS get requests, returning fake content instead of the
+     * real content for the given CID.
+     *
+     * This takes an optional CID argument. If not provided, the mock
+     * will match all get requests for any CID.
+     */
+    forGet(cid?: string) {
+        let getRuleBuilder = this.mockttpServer.forPost('/api/v0/get');
+
+        if (cid !== undefined) {
+            getRuleBuilder = getRuleBuilder.withQuery({ arg: cid });
+        }
+
+        return new ContentRetrievalRuleBuilder(getRuleBuilder);
     }
 
     /**
@@ -212,6 +233,19 @@ export class MockIPFSNode {
     }
 
     /**
+     * Mock the behaviour of IPFS pinning to a remote service
+     *
+     * This takes an optional CID argument. If not provided, the mock
+     * will match remote pinning of any CID.
+     */
+    forPinRemoteAdd(cid?: string) {
+        return new PinRemoteAddRuleBuilder(
+            cid,
+            this.pinningMock.addPinRemoteAddRule
+        );
+    }
+
+    /**
      * Mock the behaviour of IPFS pin removal.
      *
      * This takes an optional CID argument. If not provided, the mock
@@ -252,7 +286,10 @@ export class MockIPFSNode {
         // wait briefly to ensure all queried content is collected correctly.
         if (!isNode) await delay(1);
 
-        return this.catMock.getQueriedContent(this.seenRequests);
+        const cats = await this.catMock.getQueriedContent(this.seenRequests);
+        const gets = await this.getMock.getQueriedContent(this.seenRequests);
+
+        return cats.concat(gets);
     }
 
     /**

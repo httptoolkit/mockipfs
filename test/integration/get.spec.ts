@@ -11,7 +11,7 @@ import {
     delay
 } from '../test-setup';
 
-describe("IPFS cat mocking", () => {
+describe("IPFS get mocking", () => {
 
     const mockNode = MockIPFS.getLocal();
 
@@ -21,7 +21,7 @@ describe("IPFS cat mocking", () => {
     it("should time out for all content by default", async () => {
         const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
-        const result = itValue(ipfsClient.cat('ipfs.io'));
+        const result = itValue(ipfsClient.get('ipfs.io'));
 
         expect(await Promise.race([
             result,
@@ -30,21 +30,21 @@ describe("IPFS cat mocking", () => {
     });
 
     it("should return mocked content for a given id", async () => {
-        await mockNode.forCat('mock-id').thenReturn('mock-response');
+        await mockNode.forGet('mock-id').thenReturn('mock-response');
 
         const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
-        const result = await itValue(ipfsClient.cat('mock-id'));
+        const result = await itValue(ipfsClient.get('mock-id'));
 
         expect(Buffer.from(result).toString()).to.equal('mock-response');
     });
 
     it("should not return mocked content for the wrong id", async () => {
-        await mockNode.forCat('mock-id').thenReturn('mock-response');
+        await mockNode.forGet('mock-id').thenReturn('mock-response');
 
         const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
-        const result = itValue(ipfsClient.cat('wrong-id'));
+        const result = itValue(ipfsClient.get('wrong-id'));
 
         expect(await Promise.race([
             result,
@@ -52,13 +52,13 @@ describe("IPFS cat mocking", () => {
         ])).to.equal('timeout');
     });
 
-    it("should record cat queries", async () => {
-        await mockNode.forCat().thenReturn('mock-response');
+    it("should record get queries", async () => {
+        await mockNode.forGet().thenReturn('mock-response');
 
         const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
 
-        await itValue(ipfsClient.cat('an-IPFS-id')).catch(() => {});
-        await itValue(ipfsClient.cat('another-id')).catch(() => {});
+        await itValue(ipfsClient.get('an-IPFS-id')).catch(() => {});
+        await itValue(ipfsClient.get('another-id')).catch(() => {});
 
         expect(await mockNode.getQueriedContent()).to.deep.equal([
             { path: 'an-IPFS-id' },

@@ -194,6 +194,10 @@ The full list of methods available is:
   * `thenReturn(rawData: string`) - The mock data to return
   * `thenTimeout()` - Wait forever, returning no response
   * `thenCloseConnection()` - Kills the TCP connection, causing a network error
+* `forGet(ipfsPath?: string)` - Mock `ipfs get` for a specific path (or all paths, if no path is provided)
+  * `thenReturn(rawData: string`) - The mock data to return
+  * `thenTimeout()` - Wait forever, returning no response
+  * `thenCloseConnection()` - Kills the TCP connection, causing a network error
 * `forAdd()`  - Mock content publishing (`ipfs add`) for all content
   * `thenAcceptPublish()` - Return a successful result with mock CID values
   * `thenAcceptPublishAs(result: string | Array<string | { Name, Hash, Size? }>)` - Return a successful result with the given result values
@@ -215,6 +219,11 @@ The full list of methods available is:
   * `thenCloseConnection()` - Kills the TCP connection, causing a network error
 * `forPinAdd(cid?: string)` - Mock pin addition for a given CID (or all CIDs, if no CID is provided)
   * `thenPinSuccessfully()` - Returns a successful result for the pinned content
+  * `thenTimeout()` - Wait forever, returning no response
+  * `thenCloseConnection()` - Kills the TCP connection, causing a network error
+* `forPinRemoteAdd(cid?: string)` - Mock remote pin addition for a given CID (or all CIDs, if no CID is provided)
+  * `thenPinSuccessfully()` - Returns a successful result for the pinned content
+  * `thenFailAsDuplicate(message?: string)` - fail as if pin already exists, optionally fail with a specific message. The default message is "reason: \"DUPLICATE_OBJECT\""
   * `thenTimeout()` - Wait forever, returning no response
   * `thenCloseConnection()` - Kills the TCP connection, causing a network error
 * `forPinRm(cid?: string)` - Mock pin removal for a given CID (or all CIDs, if no CID is provided)

@@ -35,6 +35,15 @@ export class PinningMock {
                 priority: Mockttp.RulePriority.FALLBACK,
                 matchers: [
                     new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                    new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/remote/add')
+                ],
+                completionChecker: new Mockttp.completionCheckers.Always(),
+                handler: new Mockttp.requestHandlers.CallbackHandler(this.defaultPinRemoteAddHandler)
+            }),
+            this.mockttpServer.addRequestRules({
+                priority: Mockttp.RulePriority.FALLBACK,
+                matchers: [
+                    new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
                     new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/rm')
                 ],
                 completionChecker: new Mockttp.completionCheckers.Always(),
@@ -69,6 +78,14 @@ export class PinningMock {
         return buildIpfsFixedValueResponse(200, { Pins: [value] });
     };
 
+    defaultPinRemoteAddHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
+        const parsedURL = new URL(request.url);
+
+        const value = parsedURL.searchParams.get('arg')!;
+
+        return buildIpfsFixedValueResponse(200, { Cid: value });
+    };
+
     defaultRemoteLsHandler: MockttpRequestCallback = async (request: Mockttp.CompletedRequest) => {
         return buildIpfsFixedValueResponse(200, { RemoteServices: [] });
     };
@@ -80,6 +97,17 @@ export class PinningMock {
                 ...ruleData.matchers,
                 new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
                 new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/add')
+            ]
+        });
+    };
+
+    addPinRemoteAddRule = async (ruleData: Mockttp.RequestRuleData) => {
+        await this.mockttpServer.addRequestRules({
+            ...ruleData,
+            matchers: [
+                ...ruleData.matchers,
+                new Mockttp.matchers.MethodMatcher(Mockttp.Method.POST),
+                new Mockttp.matchers.SimplePathMatcher('/api/v0/pin/remote/add')
             ]
         });
     };
@@ -119,7 +147,9 @@ export class PinningMock {
 
     async getAddedPins(seenRequests: Mockttp.Request[]) {
         const relevantRequests = seenRequests
-            .filter((req) => req.path.startsWith('/api/v0/pin/add'));
+            .filter((req) => {
+                return req.path.startsWith('/api/v0/pin/add') || req.path.startsWith('/api/v0/pin/remote/add');
+            });
 
         return relevantRequests.map((request) => {
             const parsedURL = new URL(request.url)

@@ -16,8 +16,8 @@ describe("IPNS mocking", () => {
 
     const mockNode = MockIPFS.getLocal();
 
-    beforeEach(() => mockNode.start());
-    afterEach(() => mockNode.stop());
+    beforeEach(async () => await mockNode.start());
+    afterEach(async () => await mockNode.stop());
 
     it("refuses to resolve all names by default", async () => {
         const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { CID } from 'multiformats/cid';
 import {
     expect,
     MockIPFS,
@@ -21,8 +22,8 @@ describe("IPFS pin mocking", () => {
 
     const mockNode = MockIPFS.getLocal();
 
-    beforeEach(() => mockNode.start());
-    afterEach(() => mockNode.stop());
+    beforeEach(async () => await mockNode.start());
+    afterEach(async () => await mockNode.stop());
 
     describe("for addition", () => {
 
@@ -80,6 +81,114 @@ describe("IPFS pin mocking", () => {
             await Promise.all([
                 ipfsClient.pin.add(EXAMPLE_CID),
                 ipfsClient.pin.add(ALTERNATE_CID),
+            ]);
+
+            expect(await mockNode.getAddedPins()).to.deep.equal([
+                { cid: EXAMPLE_CID },
+                { cid: ALTERNATE_CID }
+            ]);
+        });
+
+    });
+
+    describe("for remote addition", () => {
+
+        it("should return success for additions by default", async () => {
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+
+            const exampleCid = CID.parse(EXAMPLE_CID);
+            const result = await ipfsClient.pin.remote.add(exampleCid, {
+              service: 'pinbar',
+              name: 'fooz-baz'
+            });
+
+            expect(result.cid.toString()).to.equal(EXAMPLE_CID);
+        });
+
+        it("should allow timing out for a CID to simulate pinning missing content", async () => {
+            await mockNode.forPinRemoteAdd(EXAMPLE_CID).thenTimeout();
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+            const exampleCid = CID.parse(EXAMPLE_CID);
+            const result = ipfsClient.pin.remote.add(exampleCid, {
+              service: 'pinbar',
+              name: 'fooz-baz'
+            });
+
+            expect(await Promise.race([
+                result,
+                delay(200).then(() => 'timeout')
+            ])).to.equal('timeout');
+        });
+
+        it("should allow timing out for all CIDs to simulate pinning missing content", async () => {
+            await mockNode.forPinRemoteAdd().thenTimeout();
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+            const exampleCid = CID.parse(EXAMPLE_CID);
+            const result = ipfsClient.pin.remote.add(exampleCid, {
+              service: 'pinbar',
+              name: 'fooz-baz'
+            });
+
+            expect(await Promise.race([
+                result,
+                delay(200).then(() => 'timeout')
+            ])).to.equal('timeout');
+        });
+
+        it("should allow mocking duplicate pin error", async () => {
+            await mockNode.forPinRemoteAdd().thenFailAsDuplicate("mock error");
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+            const exampleCid = CID.parse(EXAMPLE_CID);
+            const result = await ipfsClient.pin.remote.add(exampleCid, {
+              service: 'pinbar',
+              name: 'fooz-baz'
+            }).catch(e => e);
+
+            expect(result).to.be.instanceOf(HTTPError);
+            expect(result.message).to.equal("mock error");
+        });
+
+        it("should allow making only some specific pins successful", async () => {
+            await mockNode.forPinRemoteAdd(EXAMPLE_CID).thenPinSuccessfully();
+            await mockNode.forPinRemoteAdd().thenTimeout();
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+            const altCid = CID.parse(ALTERNATE_CID);
+            const timeoutResult = ipfsClient.pin.remote.add(altCid, {
+              service: 'pinbar',
+              name: 'fooz-baz'
+            });
+            const exampleCid = CID.parse(EXAMPLE_CID);
+            const successResult = ipfsClient.pin.remote.add(exampleCid, {
+              service: 'pinbar',
+              name: 'fooz-baz'
+            });
+
+            expect(await Promise.race([
+                timeoutResult,
+                delay(200).then(() => 'timeout')
+            ])).to.equal('timeout');
+            expect((await successResult).cid.toString()).to.equal(EXAMPLE_CID);
+        });
+
+        it("should allow querying the list of added pins", async () => {
+            await mockNode.forPinRemoteAdd(EXAMPLE_CID).thenPinSuccessfully();
+
+            const ipfsClient = IpfsClient.create(mockNode.ipfsOptions);
+            const altCid = CID.parse(ALTERNATE_CID);
+            const exampleCid = CID.parse(EXAMPLE_CID);
+            await Promise.all([
+                ipfsClient.pin.remote.add(exampleCid, {
+                  service: 'pinbar',
+                  name: 'fooz-baz'
+                }),
+                ipfsClient.pin.remote.add(altCid, {
+                  service: 'pinbar',
+                  name: 'fooz-baz'
+                }),
             ]);
 
             expect(await mockNode.getAddedPins()).to.deep.equal([
